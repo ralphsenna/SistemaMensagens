@@ -40,12 +40,12 @@ TpServidor* BuscaServidor(TpDescritor D, char Dominio[30], char Login[50])
 	char *Div, LoginBackup[50];
 	strcpy(LoginBackup, Login);
 	SAtual = D.Inicio;
-	if (Dominio!="")
+	if (strcmp(Dominio, "")!=0)
 	{
 		while (SAtual!=NULL && strcmp(SAtual->Dominio, Dominio)!=0)
 			SAtual = SAtual->ServProx;
 	}
-	else if (Login!="")
+	else if (strcmp(Login, "")!=0)
 	{
 		if (strchr(Login, '@'))
 		{
@@ -318,7 +318,7 @@ void ListarUsuarios(TpDescritor D)
 {
 	TpServidor *ServAux;
 	TpUsuario *UsuAux;
-	char Dominio[30], Resp;
+	char Dominio[30];
 	if (D.Inicio==NULL)
 		printf("\n\nLista de Servidores Vazia!\n");
 	else
