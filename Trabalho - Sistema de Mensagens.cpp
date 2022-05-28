@@ -231,7 +231,7 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 				else
 					Usu.Tipo = 'C';
 				CadastrarUsuarioOrd(D, Usu);
-				printf("\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
+				printf("\n\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
 			}
 			else
 				printf("\nUsuario ja existente!\n");

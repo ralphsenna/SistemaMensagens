@@ -193,7 +193,7 @@ void CadastrarServidorOrd(TpDescritor &D, TpServidor Serv)
 			Novo->ServProx = Aux->ServProx;
 			Novo->ServAnt = Aux;
 			Aux->ServProx = Novo;
-			Aux->ServProx->ServAnt = Novo;
+			Novo->ServProx->ServAnt = Novo;
 		}
 	}
 }
@@ -324,7 +324,7 @@ void ListarUsuarios(TpDescritor D)
 	else
 	{
 		printf("\n\nTodos os Usuarios do Sistema (T) ou Apenas os Usuarios de um Servidor Especifico (E)?\n");
-		if (toupper(getch())=='T')
+		if (toupper(getche())=='T')
 		{
 			ServAux = D.Inicio;
 			printf("\n\t** LISTA DE TODOS OS USUARIOS **\n");
@@ -339,7 +339,7 @@ void ListarUsuarios(TpDescritor D)
 					printf("| Login do Usuario              | Tipo  |\n");
 					printf("-----------------------------------------\n");
 					printf("|                               |       |\n");
-					while (UsuAux!=NULL)
+					while (UsuAux!=NULL && strcmp(UsuAux->Login, "")!=0)
 					{
 						printf("| %-29s | %-5c |\n", UsuAux->Login, UsuAux->Tipo);
 						UsuAux = UsuAux->UsuProx;
