@@ -150,28 +150,6 @@ void AbrindoPrograma(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensage
 	fclose(ArqMens);
 }
 
-//Busca Usuario no Servidor igual Dominio de seu Login
-char VerificaLogin(TpDescritor D, TpUsuario U) 
-{
-	TpServidor *SAtual;
-	TpUsuario *UAtual;
-	char Tipo;
-	SAtual = BuscaServidor(D, "", U.Login);
-	if (SAtual!=NULL)
-	{
-		UAtual = SAtual->ServUsu;
-		while (UAtual!=NULL && strcmp(UAtual->Login, U.Login)!=0)
-			UAtual = UAtual->UsuProx;
-		if (strcmp(U.Login, UAtual->Login)==0 && strcmp(U.Senha, UAtual->Senha)==0)
-			Tipo = UAtual->Tipo;
-		else if (UAtual!=NULL && strcmp(U.Senha, UAtual->Senha)!=0)
-			Tipo ='S';
-	}
-	else
-		Tipo = 'X';
-	return Tipo;
-}
-
 void CadastroServidores(TpDescritor &D)
 {
 	TpServidor Serv;
