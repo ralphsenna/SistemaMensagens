@@ -168,11 +168,39 @@ void CadastroServidores(TpDescritor &D)
 			printf("\nServidor %s cadastrado com sucesso!\n", Serv.Dominio);
 		}
 		else
-			printf("\n\nServidor ja existente!\n");
+			printf("\nServidor ja existente!\n");
 		getch();
 		printf("\nDominio do Servidor: ");
 		fflush(stdin);
 		gets(Serv.Dominio);
+	}
+}
+
+void ExclusaoServidores(TpDescritor &D)
+{
+	TpServidor *Aux;
+	char Dominio[30];
+	printf("\n\n** EXCLUSAO DE SERVIDORES **\n\n");
+	printf("Qual Servidor deseja excluir?\n");
+	gets(Dominio);
+	while (strcmp(Dominio, "\0")!=0)
+	{
+		if (strcmp(Dominio, "admin")!=0)
+		{
+			Aux = BuscaServidor(D, Dominio, "");
+			if (Aux!=NULL)
+			{
+				ExcluirServidor(D, Dominio);
+				printf("\nServidor %s excluido!\n", Dominio);
+			}
+			else
+				printf("\nEste Servidor nao esta cadastrado!\n");
+		}
+		else
+			printf("\nO servidor admin nao pode ser excluido!\n");
+		getch();
+		printf("\nQual Servidor deseja excluir?\n");
+		gets(Dominio);
 	}
 }
 
@@ -219,36 +247,6 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 	}
 }
 
-void ExclusaoServidores(TpDescritor &D)
-{
-	TpServidor *Aux;
-	char Dominio[30];
-	printf("\n\n** EXCLUSAO DE SERVIDORES **\n\n");
-	printf("Qual Servidor deseja excluir?\n");
-	gets(Dominio);
-	while (strcmp(Dominio, "\0")!=0)
-	{
-		if (strcmp(Dominio, "admin")!=0)
-		{
-			if (Aux!=NULL)
-			{
-				ExcluirServidor(D, Dominio);
-				printf("\nServidor %s excluido!\n", Dominio);
-			}
-			else
-				printf("\nEste Servidor nao esta cadastrado!\n");
-			getch();
-			printf("\nQual Servidor deseja excluir?\n");
-			gets(Dominio);
-		}
-		else
-			printf("\nO servidor admin nao pode ser excluido!\n");
-		getch();
-		printf("\nQual Servidor deseja excluir?\n");
-		gets(Dominio);
-	}
-}
-
 //Não terminado
 char MenuUsuario(char Login[50])
 {
@@ -256,14 +254,14 @@ char MenuUsuario(char Login[50])
 	printf("** MENU DO USUARIO **\n");
 	printf("Usuario: %s\t\tComum\n\n", Login);
 	printf("[A] Enviar Mensagens\n");
-	printf("[B] Listar Mensagens\n");
-	printf("[C] Buscar Mensagens\n");
-	printf("[D] Deletar Mensagens\n");
+	printf("[B] Listar Mensagens recebidas\n");
+	printf("[C] Buscar Mensagens recebidas\n");
+	printf("[D] Deletar Mensagens recebidas\n");
 
 	printf("\n[E] Listar Usuarios\n");
 	printf("[F] Buscar Usuarios\n");
-	printf("[G] Alterar Usuario\n");
-	printf("[H] Deletar Usuario\n");
+	printf("[G] Alterar Conta\n");
+	printf("[H] Deletar Conta\n");
 
 	printf("\n[ESC] Sair do Programa\n");
 	printf("\nPressione a opcao desejada: ");
@@ -312,7 +310,6 @@ void MenuLogin(TpDescritor &D)
 				switch(Opcao)
 				{
 					case 'A':
-							CadastroUsuarios(D, Tipo);
 							break;
 
 					case 'B':
@@ -325,6 +322,7 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'E':
+							ListarUsuarios(D);
 							break;
 
 					case 'F':
