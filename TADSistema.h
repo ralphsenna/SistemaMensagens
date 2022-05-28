@@ -334,7 +334,7 @@ void ListarUsuarios(TpDescritor D)
 				if (UsuAux!=NULL)
 				{
 					printf("-----------------------------------------\n");
-					printf("| Dominio: %-20s |\n", ServAux->Dominio);
+					printf("| Dominio: %-29s |\n", ServAux->Dominio);
 					printf("-----------------------------------------\n");
 					printf("| Login do Usuario              | Tipo  |\n");
 					printf("-----------------------------------------\n");

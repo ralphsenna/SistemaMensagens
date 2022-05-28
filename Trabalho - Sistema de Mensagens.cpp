@@ -203,7 +203,7 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 				else
 					Usu.Tipo = 'C';
 				CadastrarUsuarioOrd(D, Usu);
-				printf("\n\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
+				printf("\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
 			}
 			else
 				printf("\nUsuario ja existente!\n");
@@ -255,7 +255,7 @@ char MenuUsuario(char Login[50])
 	system("cls");
 	printf("** MENU DO USUARIO **\n");
 	printf("Usuario: %s\t\tComum\n\n", Login);
-	printf("[A]	Enviar Mensagens\n");
+	printf("[A] Enviar Mensagens\n");
 	printf("[B] Listar Mensagens\n");
 	printf("[C] Buscar Mensagens\n");
 	printf("[D] Deletar Mensagens\n");
@@ -312,6 +312,7 @@ void MenuLogin(TpDescritor &D)
 				switch(Opcao)
 				{
 					case 'A':
+							CadastroUsuarios(D, Tipo);
 							break;
 
 					case 'B':
