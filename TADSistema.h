@@ -58,7 +58,7 @@ TpServidor* BuscaServidor(TpDescritor D, char Dominio[30], char Login[50])
 		else
 			SAtual = NULL;
 	}
-	if (SAtual!=NULL)
+	if (SAtual!=NULL && (strcmp(Dominio, "")!=0 || strcmp(Login, "")!=0))
 		return SAtual;
 	else
 		return NULL;
@@ -187,8 +187,8 @@ void CadastrarServidorOrd(TpDescritor &D, TpServidor Serv)
 		}
 		else
 		{
-			Aux = D.Inicio;
-			while (strcmp(Serv.Dominio, Aux->ServProx->Dominio)>0)
+			Aux = D.Inicio->ServProx;
+			while (strcmp(Serv.Dominio, Aux->Dominio)>0)
                 Aux = Aux->ServProx;
 			Novo->ServProx = Aux->ServProx;
 			Novo->ServAnt = Aux;
@@ -339,7 +339,7 @@ void ListarUsuarios(TpDescritor D)
 					printf("| Login do Usuario              | Tipo  |\n");
 					printf("-----------------------------------------\n");
 					printf("|                               |       |\n");
-					while (UsuAux!=NULL && strcmp(UsuAux->Login, "")!=0)
+					while (UsuAux!=NULL)
 					{
 						printf("| %-29s | %-5c |\n", UsuAux->Login, UsuAux->Tipo);
 						UsuAux = UsuAux->UsuProx;

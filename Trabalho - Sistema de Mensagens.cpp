@@ -83,27 +83,19 @@ void SalvarListas(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *
 		SAtual.ServUsu = NULL;
 		fwrite(&SAtual, sizeof(TpServidor), 1, ArqServ);
 		Usu = Serv->ServUsu;
-		if (Usu==NULL)
+		while (Usu!=NULL)
 		{
-			strcpy(UAtual.Login, "");
+			strcpy(UAtual.Login, Usu->Login);
+			strcpy(UAtual.Senha, Usu->Senha);
+			UAtual.Tipo = Usu->Tipo;
+			UAtual.UsuAnt = NULL;
+			UAtual.UsuProx = NULL;
+			UAtual.UsuMens = NULL;
 			fwrite(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
+			Usu = Usu->UsuProx;
 		}
-		else
-		{
-			while (Usu!=NULL)
-			{
-				strcpy(UAtual.Login, Usu->Login);
-				strcpy(UAtual.Senha, Usu->Senha);
-				UAtual.Tipo = Usu->Tipo;
-				UAtual.UsuAnt = NULL;
-				UAtual.UsuProx = NULL;
-				UAtual.UsuMens = NULL;
-				fwrite(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
-				Usu = Usu->UsuProx;
-			}
-			strcpy(UAtual.Login, "");
-			fwrite(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
-		}
+		strcpy(UAtual.Login, "");
+		fwrite(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
 		Serv = Serv->ServProx;
 	}
 	fclose(ArqServ);
@@ -234,7 +226,7 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 				printf("\n\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
 			}
 			else
-				printf("\nUsuario ja existente!\n");
+				printf("\nUsuario ja existente neste Servidor!\n");
 		}
 		else if (Resp=='L')
 			printf("\nLogin Invalido!\n");
