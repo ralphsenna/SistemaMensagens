@@ -1,9 +1,15 @@
 //Declaração de Structs
+struct TpData //20B
+{
+	int Ano, Mes, Dia, Hora, Minuto; //4B + 4B + 4B + 4B + 4B = 20B
+};
+
 struct TpMensagem //578B
 {
 	TpMensagem *MensAnt; //4B
 	TpMensagem *MensProx; //4B
-	char Assunto[50], Mensagem[500], DataHora[20]; //50B + 500B + 20B = 570B
+	TpData DataHora;
+	char Login[50],Assunto[50], Mensagem[500]; //50B + 500B + 20B = 570B
 };
 
 struct TpUsuario //93B
@@ -37,14 +43,14 @@ void Inicializar(TpDescritor &D)
 
 TpServidor* BuscaServidor(TpDescritor D, char Dominio[30], char Login[50])
 {
-	TpServidor *SAtual;
+	TpServidor *Serv;
 	char *Div, LoginBackup[50];
 	strcpy(LoginBackup, Login);
-	SAtual = D.Inicio;
+	Serv = D.Inicio;
 	if (strcmp(Dominio, "")!=0)
 	{
-		while (SAtual!=NULL && strcmp(SAtual->Dominio, Dominio)!=0)
-			SAtual = SAtual->ServProx;
+		while (Serv!=NULL && strcmp(Serv->Dominio, Dominio)!=0)
+			Serv = Serv->ServProx;
 	}
 	else if (strcmp(Login, "")!=0)
 	{
@@ -52,30 +58,35 @@ TpServidor* BuscaServidor(TpDescritor D, char Dominio[30], char Login[50])
 		{
 			Div = strtok(Login, "@");
 			Div = strtok(NULL, "@");
-			while (SAtual!=NULL && strcmp(SAtual->Dominio, Div)!=0)
-				SAtual = SAtual->ServProx;
+			while (Serv!=NULL && strcmp(Serv->Dominio, Div)!=0)
+				Serv = Serv->ServProx;
 			strcpy(Login, LoginBackup);
 		}
 		else
-			SAtual = NULL;
+			Serv = NULL;
 	}
-	if (SAtual!=NULL && (strcmp(Dominio, "")!=0 || strcmp(Login, "")!=0))
-		return SAtual;
+	if (Serv!=NULL && (strcmp(Dominio, "")!=0 || strcmp(Login, "")!=0))
+		return Serv;
 	else
 		return NULL;
 }
 
 TpUsuario* BuscaUsuario(TpDescritor D, char Login[50])
 {
-	TpServidor *SAtual=BuscaServidor(D, "", Login);
-	TpUsuario *UAtual=SAtual->ServUsu;
+	TpServidor *Serv=BuscaServidor(D, "", Login);
+	TpUsuario *Usu=Serv->ServUsu;
 	char LoginBackup[50];
-	strcpy(LoginBackup, Login);
-	while (UAtual!=NULL && strcmp(UAtual->Login, Login)!=0)
-		UAtual = UAtual->UsuProx;
-	strcpy(Login, LoginBackup);
-	if (UAtual!=NULL)
-		return UAtual;
+	if (strchr(Login, '@'))
+	{
+		strcpy(LoginBackup, Login);
+		while (Usu!=NULL && strcmp(Usu->Login, Login)!=0)
+			Usu = Usu->UsuProx;
+		strcpy(Login, LoginBackup);
+		if (Usu!=NULL)
+			return Usu;
+		else
+			return NULL;
+	}
 	else
 		return NULL;
 }
@@ -103,17 +114,17 @@ char VerificaLogin(TpDescritor D, TpUsuario U)
 
 char SeparaDominio(TpDescritor D, char Login[50])
 {
-	TpServidor *Aux=D.Inicio;
+	TpServidor *Serv=D.Inicio;
 	char *Div, LoginBackup[50];
 	strcpy(LoginBackup, Login);
 	if (strchr(Login, '@'))
 	{
 		Div = strtok(Login, "@");
 		Div = strtok(NULL, "@");
-		while (Aux!=NULL && strcmp(Aux->Dominio, Div)!=0)
-			Aux = Aux->ServProx;
+		while (Serv!=NULL && strcmp(Serv->Dominio, Div)!=0)
+			Serv = Serv->ServProx;
 		strcpy(Login, LoginBackup);
-		if (Aux!=NULL)
+		if (Serv!=NULL)
 			return 'T';
 		else
 			return 'F';
@@ -124,37 +135,37 @@ char SeparaDominio(TpDescritor D, char Login[50])
 
 void LimparMensagens(TpUsuario *Usu)
 {
-	TpMensagem *MAuxF;
-	MAuxF = Usu->UsuMens;
-	if (MAuxF!=NULL)
+	TpMensagem *MensF;
+	MensF = Usu->UsuMens;
+	if (MensF!=NULL)
 	{
-		while (MAuxF->MensProx!=NULL)
-			MAuxF = MAuxF->MensProx;
-		while (MAuxF->MensAnt!=NULL)
+		while (MensF->MensProx!=NULL)
+			MensF = MensF->MensProx;
+		while (MensF->MensAnt!=NULL)
 		{
-			MAuxF = MAuxF->MensAnt;
-			delete(MAuxF->MensProx);
+			MensF = MensF->MensAnt;
+			delete(MensF->MensProx);
 		}
-		delete(MAuxF);
+		delete(MensF);
 		Usu->UsuMens = NULL;
 	}
 }
 
 void LimparUsuarios(TpServidor *Serv)
 {
-	TpUsuario *UAuxF;
-	UAuxF = Serv->ServUsu;
-	if (UAuxF!=NULL)
+	TpUsuario *UsuF;
+	UsuF = Serv->ServUsu;
+	if (UsuF!=NULL)
 	{
-		while (UAuxF->UsuProx!=NULL)
-			UAuxF = UAuxF->UsuProx;
-		while (UAuxF->UsuAnt!=NULL)
+		while (UsuF->UsuProx!=NULL)
+			UsuF = UsuF->UsuProx;
+		while (UsuF->UsuAnt!=NULL)
 		{
-			LimparMensagens(UAuxF);
-			UAuxF = UAuxF->UsuAnt;
-			delete(UAuxF->UsuProx);
+			LimparMensagens(UsuF);
+			UsuF = UsuF->UsuAnt;
+			delete(UsuF->UsuProx);
 		}
-		delete(UAuxF);
+		delete(UsuF);
 		Serv->ServUsu = NULL;
 	}
 }
@@ -218,25 +229,28 @@ void ListarServidores(TpDescritor D)
 			Aux = Aux->ServProx;
 		}
 		printf("-----------------------------------------------\n");
-		getch();
 	}
+	getch();
 }
 
 void ConsultarServidores(TpDescritor D)
 {
-	TpServidor *Aux=D.Inicio;
+	TpServidor *Serv=D.Inicio;
 	char Dominio[30];
-	if (Aux==NULL)
+	if (Serv==NULL)
+	{
 		printf("\n\nLista de Servidores Vazia!\n");
+		getch();
+	}
 	else
 	{
 		printf("\n\nQual nome do Dominio do Servidor que procura?\n");
 		gets(Dominio);
 		while (strcmp(Dominio, "\0")!=0)
 		{
-			Aux = BuscaServidor(D, Dominio, "");
-			if (Aux!=NULL)
-				printf("\nDominio: %s\tLocal: %s\n", Aux->Dominio, Aux->Local);
+			Serv = BuscaServidor(D, Dominio, "");
+			if (Serv!=NULL)
+				printf("\nDominio: %s\tLocal: %s\n", Serv->Dominio, Serv->Local);
 			else
 				printf("\nEste Servidor nao esta cadastrado!\n");
 			getch();
@@ -245,6 +259,25 @@ void ConsultarServidores(TpDescritor D)
 		}
 	}
 }
+
+//Não terminado
+void AlterarServidor(TpDescritor &D, char Dominio[30])
+{
+	TpServidor *Serv;
+	char novoD[30];
+	Serv = BuscaServidor(D,Dominio,"");
+	printf("Digite o novo dominio ou digite ENTER para cancelar:\n");
+	scanf("%s",&novoD);
+	if(BuscaServidor(D,novoD,"")==NULL)
+	{
+		//Serv->Dominio = novoD;
+		//Serv = LinkarUsuarios(Serv);
+	}
+	else
+	{
+		printf("Servidor já existente\n");
+	}
+} 
 
 void ExcluirServidor(TpDescritor &D, char Dominio[30])
 {
@@ -318,8 +351,8 @@ void CadastrarUsuarioOrd(TpDescritor &D, TpUsuario Usu)
 
 void ListarUsuarios(TpDescritor D)
 {
-	TpServidor *ServAux;
-	TpUsuario *UsuAux;
+	TpServidor *Serv;
+	TpUsuario *Usu;
 	char Dominio[30];
 	if (D.Inicio==NULL)
 		printf("\n\nLista de Servidores Vazia!\n");
@@ -328,38 +361,38 @@ void ListarUsuarios(TpDescritor D)
 		printf("\n\nTodos os Usuarios do Sistema (T) ou Apenas os Usuarios de um Servidor Especifico (E)?\n");
 		if (toupper(getche())=='T')
 		{
-			ServAux = D.Inicio;
+			Serv = D.Inicio;
 			printf("\n\t** LISTA DE TODOS OS USUARIOS **\n");
-			while (ServAux!=NULL)
+			while (Serv!=NULL)
 			{
-				UsuAux = ServAux->ServUsu;
-				if (UsuAux!=NULL)
+				Usu = Serv->ServUsu;
+				if (Usu!=NULL)
 				{
 					printf("-----------------------------------------\n");
-					printf("| Dominio: %-28s |\n", ServAux->Dominio);
+					printf("| Dominio: %-28s |\n", Serv->Dominio);
 					printf("-----------------------------------------\n");
 					printf("| Login do Usuario              | Tipo  |\n");
 					printf("-----------------------------------------\n");
 					printf("|                               |       |\n");
-					while (UsuAux!=NULL)
+					while (Usu!=NULL)
 					{
-						printf("| %-29s | %-5c |\n", UsuAux->Login, UsuAux->Tipo);
-						UsuAux = UsuAux->UsuProx;
+						printf("| %-29s | %-5c |\n", Usu->Login, Usu->Tipo);
+						Usu = Usu->UsuProx;
 					}
 					printf("-----------------------------------------\n\n");
 				}
-				ServAux = ServAux->ServProx;
+				Serv = Serv->ServProx;
 			}
 		}
 		else
 		{
 			printf("\nQual Servidor?\n");
 			gets(Dominio);
-			ServAux = BuscaServidor(D, Dominio, "");
-			if (ServAux!=NULL)
+			Serv = BuscaServidor(D, Dominio, "");
+			if (Serv!=NULL)
 			{
-				UsuAux = ServAux->ServUsu;
-				if (UsuAux!=NULL)
+				Usu = Serv->ServUsu;
+				if (Usu!=NULL)
 				{
 					printf("\n\n\t** LISTA DE USUARIOS DO SERVIDOR \"%s\" **\n", Dominio);
 					printf("---------------------------------\n");
@@ -368,10 +401,10 @@ void ListarUsuarios(TpDescritor D)
 					printf("| Login do Usuario              |\n");
 					printf("---------------------------------\n");
 					printf("|                               |\n");
-					while (UsuAux!=NULL)
+					while (Usu!=NULL)
 					{
-						printf("| %-29s |\n", UsuAux->Login);
-						UsuAux = UsuAux->UsuProx;
+						printf("| %-29s |\n", Usu->Login);
+						Usu = Usu->UsuProx;
 					}
 					printf("---------------------------------\n");
 				}
@@ -381,7 +414,35 @@ void ListarUsuarios(TpDescritor D)
 			else
 				printf("\nServidor nao existe!\n");
 		}
+	}
+	getch();
+}
+
+void ConsultarUsuarios(TpDescritor D)
+{
+	TpServidor *Serv=D.Inicio;
+	TpUsuario *Usu;
+	char Login[50];
+	if (Serv==NULL)
+	{
+		printf("\n\nLista de Servidores Vazia!\n");
 		getch();
+	}
+	else
+	{
+		printf("\n\nQual Usuario deseja pesquisar?\n");
+		gets(Login);
+		while (strcmp(Login, "\0")!=0)
+		{
+			Usu = BuscaUsuario(D, Login);
+			if (Usu!=NULL)
+				printf("\nUsuario: %s\n", Usu->Login);
+			else
+				printf("\nEste Usuario nao esta cadastrado!\n");
+			getch();
+			printf("\nQual Usuario deseja pesquisar?\n");
+			gets(Login);
+		}
 	}
 }
 
@@ -393,32 +454,49 @@ void ListarUsuarios(TpDescritor D)
 
 void ExcluirUsuario(TpDescritor D, char Login[50])
 {
-	TpServidor *ServAux=BuscaServidor(D, "", Login);
-	TpUsuario *UsuAux=ServAux->ServUsu;
-	if (strcmp(UsuAux->Login, Login)==0)
+	TpServidor *Serv=BuscaServidor(D, "", Login);
+	TpUsuario *Usu=Serv->ServUsu;
+	if (strcmp(Usu->Login, Login)==0)
 	{
-		LimparMensagens(UsuAux);
-		ServAux->ServUsu = UsuAux->UsuProx;
-		UsuAux->UsuProx->UsuAnt = NULL;
-		delete(UsuAux);
+		LimparMensagens(Usu);
+		Serv->ServUsu = Usu->UsuProx;
+		Usu->UsuProx->UsuAnt = NULL;
+		delete(Usu);
 	}
 	else
 	{
-		while (UsuAux!=NULL && strcmp(UsuAux->Login, Login)!=0)
-			UsuAux = UsuAux->UsuProx;
-		if(UsuAux->UsuProx==NULL)
+		while (Usu!=NULL && strcmp(Usu->Login, Login)!=0)
+			Usu = Usu->UsuProx;
+		if(Usu->UsuProx==NULL)
 		{
-			LimparMensagens(UsuAux);
-			UsuAux->UsuAnt->UsuProx = NULL;
+			LimparMensagens(Usu);
+			Usu->UsuAnt->UsuProx = NULL;
 		}
 		else
 		{
-			LimparMensagens(UsuAux);
-			UsuAux->UsuProx->UsuAnt = UsuAux->UsuAnt;
-			UsuAux->UsuAnt->UsuProx = UsuAux->UsuProx;
+			LimparMensagens(Usu);
+			Usu->UsuProx->UsuAnt = Usu->UsuAnt;
+			Usu->UsuAnt->UsuProx = Usu->UsuProx;
 		}
-		delete(UsuAux);
+		delete(Usu);
 	}
+}
+
+//Não terminado
+TpMensagem* CadastrarMensagem(TpMensagem *Mens,char Login[50],char Mensagem[500], char Assunto[50])
+{
+	TpMensagem *Novo,*Aux;
+	Novo = new TpMensagem;
+	strcpy(Novo->Assunto,Assunto);
+	strcpy(Novo->Mensagem,Mensagem);
+	strcpy(Novo->Login,Login);
+	Novo->MensProx = NULL;
+	Aux = Mens;
+	while(Aux->MensProx!=NULL)
+		Aux = Aux->MensProx;
+	Aux -> MensProx = Novo;
+	Novo -> MensAnt = Aux;
+	return Mens;
 }
 
 //Não terminado
@@ -442,9 +520,12 @@ TpMensagem* ExcluirMensagem(char Assunto[50],TpMensagem *Mens)
 				Aux->MensAnt->MensProx = NULL;
 				delete(Aux);
 			}
-			Aux->MensProx->MensAnt = Aux->MensAnt;
-			Aux->MensAnt->MensProx = Aux->MensProx;
-			delete(Aux);
+			else
+			{
+				Aux->MensProx->MensAnt = Aux->MensAnt;
+				Aux->MensAnt->MensProx = Aux->MensProx;
+				delete(Aux);
+			}
 		}
 		else
 		{
@@ -455,28 +536,17 @@ TpMensagem* ExcluirMensagem(char Assunto[50],TpMensagem *Mens)
 }
 
 //Não terminado
-/* void MostraHoraAtual()
+/* TpData MostraHoraAtual()
 {
-	char data[30],buffer[10];
 	time_t agr = time(0);
 	tm* lt = localtime(&agr);
-	strcpy(data,"");
-	if(lt->tm_hour<10)
-	{
-		strcat(data,"0");
-		strcat(data,itoa(lt->tm_hour,buffer,10));
-	}
-	else
-		strcat(data,itoa(lt->tm_hour,buffer,10));
-	strcat(data,":");
-	if(lt->tm_min<10)
-	{
-		strcat(data,"0");
-		strcat(data,itoa(lt->tm_min,buffer,10));
-	}
-	else
-		strcat(data,itoa(lt->tm_min,buffer,10));
-	printf("%s",data);
+	TpData data;
+	data.ano = 1900+lt->tm_year;
+	data.mes = lt->tm_mon;
+	data.dia = lt->tm_mday;
+	data.hora = lt->tm_hour;
+	data.minuto = lt->tm_min;
+	return data;
 }
 
 TpServidor* LinkarUsuarios(TpServidor *Serv)
@@ -497,21 +567,4 @@ TpServidor* LinkarUsuarios(TpServidor *Serv)
 	}
 	return Serv;
 }
-
-void AlterarServidor(TpDescritor &D, char Dominio[30])
-{
-	TpServidor *Serv;
-	char novoD[30];
-	Serv = BuscaServidor(D,Dominio,"");
-	printf("Digite o novo dominio ou digite ENTER para cancelar:\n");
-	scanf("%s",&novoD);
-	if(BuscaServidor(D,novoD,"")==NULL)
-	{
-		Serv->Dominio = novoD;
-		Serv = LinkarUsuarios(Serv);
-	}
-	else
-	{
-		printf("Servidor já existente\n");
-	}
-} */
+*/

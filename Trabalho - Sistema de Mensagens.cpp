@@ -12,8 +12,8 @@ void MenuLogin(TpDescritor &D);
 //Não terminado (Mensagens não incluídas)
 void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, TpServidor *Serv, TpUsuario *Usu, TpMensagem *Mens)
 {
-	TpServidor SAtual;
-	TpUsuario UAtual, *UAux;
+	TpServidor RegServ;
+	TpUsuario RegUsu, *UsuAux;
 	//TpMensagem MAtual;
 	ArqServ = fopen("Servidores.dat", "rb");
 	ArqUsu = fopen("Usuarios.dat", "rb");
@@ -21,12 +21,12 @@ void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, 
 	rewind(ArqServ);
 	rewind(ArqUsu);
 	//rewind(ArqMens);
-	fread(&SAtual, sizeof(TpServidor), 1, ArqServ);
+	fread(&RegServ, sizeof(TpServidor), 1, ArqServ);
 	while (!feof(ArqServ))
 	{
 		Serv = new TpServidor;
-		strcpy(Serv->Dominio, SAtual.Dominio);
-		strcpy(Serv->Local, SAtual.Local);
+		strcpy(Serv->Dominio, RegServ.Dominio);
+		strcpy(Serv->Local, RegServ.Local);
 		Serv->ServAnt = NULL;
 		Serv->ServProx = NULL;
 		Serv->ServUsu = NULL;
@@ -41,13 +41,13 @@ void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, 
 			Serv->ServAnt = D.Fim;
 			D.Fim = Serv;
 		}
-		fread(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
-		while (!feof(ArqUsu) && BuscaServidor(D, "", UAtual.Login)!=NULL)
+		fread(&RegUsu, sizeof(TpUsuario), 1, ArqUsu);
+		while (!feof(ArqUsu) && BuscaServidor(D, "", RegUsu.Login)!=NULL)
 		{
 			Usu = new TpUsuario;
-			strcpy(Usu->Login, UAtual.Login);
-			strcpy(Usu->Senha, UAtual.Senha);
-			Usu->Tipo = UAtual.Tipo;
+			strcpy(Usu->Login, RegUsu.Login);
+			strcpy(Usu->Senha, RegUsu.Senha);
+			Usu->Tipo = RegUsu.Tipo;
 			Usu->UsuAnt = NULL;
 			Usu->UsuProx = NULL;
 			Usu->UsuMens = NULL;
@@ -55,16 +55,13 @@ void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, 
 				D.Fim->ServUsu = Usu;
 			else
 			{
-				UAux->UsuProx = Usu;
-				Usu->UsuAnt = UAux;
-
-				/* D.Fim->ServUsu->UsuProx = Usu;
-				Usu->UsuAnt = D.Fim->ServUsu; */
+				UsuAux->UsuProx = Usu;
+				Usu->UsuAnt = UsuAux;
 			}		
-			UAux = Usu;	
-			fread(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
+			UsuAux = Usu;	
+			fread(&RegUsu, sizeof(TpUsuario), 1, ArqUsu);
 		}
-		fread(&SAtual, sizeof(TpServidor), 1, ArqServ);
+		fread(&RegServ, sizeof(TpServidor), 1, ArqServ);
 	}
 }
 
@@ -74,8 +71,8 @@ void SalvarListas(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *
 	FILE *ArqServ = fopen("Servidores.dat", "wb");
 	FILE *ArqUsu = fopen("Usuarios.dat", "wb");
 	//FILE *ArqMens = fopen("Mensagens.dat", "wb");
-	TpServidor SAtual;
-	TpUsuario UAtual;
+	TpServidor RegServ;
+	TpUsuario RegUsu;
 	//TpMensagem MAtual;
 	fseek(ArqServ, 0, 2);
 	fseek(ArqUsu, 0, 2);
@@ -83,26 +80,26 @@ void SalvarListas(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *
 	Serv = D.Inicio;
 	while (Serv!=NULL)
 	{
-		strcpy(SAtual.Dominio, Serv->Dominio);
-		strcpy(SAtual.Local, Serv->Local);
-		SAtual.ServAnt = NULL;
-		SAtual.ServProx = NULL;
-		SAtual.ServUsu = NULL;
-		fwrite(&SAtual, sizeof(TpServidor), 1, ArqServ);
+		strcpy(RegServ.Dominio, Serv->Dominio);
+		strcpy(RegServ.Local, Serv->Local);
+		RegServ.ServAnt = NULL;
+		RegServ.ServProx = NULL;
+		RegServ.ServUsu = NULL;
+		fwrite(&RegServ, sizeof(TpServidor), 1, ArqServ);
 		Usu = Serv->ServUsu;
 		while (Usu!=NULL)
 		{
-			strcpy(UAtual.Login, Usu->Login);
-			strcpy(UAtual.Senha, Usu->Senha);
-			UAtual.Tipo = Usu->Tipo;
-			UAtual.UsuAnt = NULL;
-			UAtual.UsuProx = NULL;
-			UAtual.UsuMens = NULL;
-			fwrite(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
+			strcpy(RegUsu.Login, Usu->Login);
+			strcpy(RegUsu.Senha, Usu->Senha);
+			RegUsu.Tipo = Usu->Tipo;
+			RegUsu.UsuAnt = NULL;
+			RegUsu.UsuProx = NULL;
+			RegUsu.UsuMens = NULL;
+			fwrite(&RegUsu, sizeof(TpUsuario), 1, ArqUsu);
 			Usu = Usu->UsuProx;
 		}
-		strcpy(UAtual.Login, "");
-		fwrite(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
+		strcpy(RegUsu.Login, "");
+		fwrite(&RegUsu, sizeof(TpUsuario), 1, ArqUsu);
 		Serv = Serv->ServProx;
 	}
 	fclose(ArqServ);
@@ -115,31 +112,31 @@ void AbrindoPrograma(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensage
 	FILE *ArqServ = fopen("Servidores.dat", "rb");
 	FILE *ArqUsu = fopen("Usuarios.dat", "rb");
 	FILE *ArqMens = fopen("Mensagens.dat", "rb");
-	TpServidor SAtual;
-	TpUsuario UAtual;
+	TpServidor RegServ;
+	TpUsuario RegUsu;
 	if (ArqServ==NULL)
 	{
 		ArqServ = fopen("Servidores.dat", "ab");
 		ArqUsu = fopen("Usuarios.dat", "ab");
-		strcpy(UAtual.Login, "radmin@admin");
-		strcpy(UAtual.Senha, "123");
-		UAtual.Tipo = 'A';
-		UAtual.UsuAnt = NULL;
-		UAtual.UsuProx = NULL;
-		UAtual.UsuMens = NULL;
-		fwrite(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
-		strcpy(SAtual.Dominio, "admin");
-		strcpy(SAtual.Local, "Meu Computador");
-		SAtual.ServAnt = NULL;
-		SAtual.ServProx = NULL;
-		SAtual.ServUsu = NULL;
-		fwrite(&SAtual, sizeof(TpServidor), 1, ArqServ);
-		strcpy(SAtual.Dominio, "hotmail.com");
-		strcpy(SAtual.Local, "Brasil");
-		SAtual.ServAnt = NULL;
-		SAtual.ServProx = NULL;
-		SAtual.ServUsu = NULL;
-		fwrite(&SAtual, sizeof(TpServidor), 1, ArqServ);
+		strcpy(RegUsu.Login, "radmin@admin");
+		strcpy(RegUsu.Senha, "123");
+		RegUsu.Tipo = 'A';
+		RegUsu.UsuAnt = NULL;
+		RegUsu.UsuProx = NULL;
+		RegUsu.UsuMens = NULL;
+		fwrite(&RegUsu, sizeof(TpUsuario), 1, ArqUsu);
+		strcpy(RegServ.Dominio, "admin");
+		strcpy(RegServ.Local, "Meu Computador");
+		RegServ.ServAnt = NULL;
+		RegServ.ServProx = NULL;
+		RegServ.ServUsu = NULL;
+		fwrite(&RegServ, sizeof(TpServidor), 1, ArqServ);
+		strcpy(RegServ.Dominio, "hotmail.com");
+		strcpy(RegServ.Local, "Brasil");
+		RegServ.ServAnt = NULL;
+		RegServ.ServProx = NULL;
+		RegServ.ServUsu = NULL;
+		fwrite(&RegServ, sizeof(TpServidor), 1, ArqServ);
 		RecuperaListas(D, ArqServ, ArqUsu, ArqMens, Serv, Usu, Mens);
 	}
 	else
@@ -177,7 +174,7 @@ void CadastroServidores(TpDescritor &D)
 
 void ExclusaoServidores(TpDescritor &D)
 {
-	TpServidor *Aux;
+	TpServidor *Serv;
 	char Dominio[30];
 	printf("\n\n** EXCLUSAO DE SERVIDORES **\n\n");
 	printf("Qual Servidor deseja excluir?\n");
@@ -186,8 +183,8 @@ void ExclusaoServidores(TpDescritor &D)
 	{
 		if (strcmp(Dominio, "admin")!=0)
 		{
-			Aux = BuscaServidor(D, Dominio, "");
-			if (Aux!=NULL)
+			Serv = BuscaServidor(D, Dominio, "");
+			if (Serv!=NULL)
 			{
 				ExcluirServidor(D, Dominio);
 				printf("\nServidor %s excluido!\n", Dominio);
@@ -356,21 +353,21 @@ char MenuAdmin(char Login[50])
 //Não terminado
 void MenuLogin(TpDescritor &D)
 {
-	TpUsuario Usu;
+	TpUsuario RegUsu;
 	char Opcao;
 	system("cls");
 	printf("\t\t** LOGIN DO USUARIO **\n\n");
 	printf("Login: ");
-	gets(Usu.Login);
-	while (strcmp(Usu.Login, "\0")!=0)
+	gets(RegUsu.Login);
+	while (strcmp(RegUsu.Login, "\0")!=0)
 	{
 		printf("Senha: ");
-		gets(Usu.Senha);
-		Usu.Tipo = VerificaLogin(D, Usu);
-		if (Usu.Tipo=='C')
+		gets(RegUsu.Senha);
+		RegUsu.Tipo = VerificaLogin(D, RegUsu);
+		if (RegUsu.Tipo=='C')
 			do
 			{
-				Opcao = MenuUsuario(Usu.Login);
+				Opcao = MenuUsuario(RegUsu.Login);
 				switch(Opcao)
 				{
 					case 'A':
@@ -391,22 +388,23 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'F':
+							ConsultarUsuarios(D);
 							break;
 
 					case 'G':
 							break;
 
 					case 'H':
-							ExclusaoUsuarios(D, Usu);
-							if (strcmp(Usu.Login, "")==0)
+							ExclusaoUsuarios(D, RegUsu);
+							if (strcmp(RegUsu.Login, "")==0)
 								Opcao = 27;
 							break;
 				}
 			}while(Opcao!=27);
-		else if (Usu.Tipo=='A')
+		else if (RegUsu.Tipo=='A')
 			do
 			{
-				Opcao = MenuAdmin(Usu.Login);
+				Opcao = MenuAdmin(RegUsu.Login);
 				switch(Opcao)
 				{
 					case 'A':
@@ -430,7 +428,7 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'F':
-							CadastroUsuarios(D, Usu.Tipo);
+							CadastroUsuarios(D, RegUsu.Tipo);
 							break;
 
 					case 'G':
@@ -438,7 +436,7 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'H':
-							//ConsultarUsuarios();
+							ConsultarUsuarios(D);
 							break;		
 
 					case 'I':
@@ -446,13 +444,25 @@ void MenuLogin(TpDescritor &D)
 							break;	
 
 					case 'J':
-							ExclusaoUsuarios(D, Usu);
-							if (strcmp(Usu.Login, "")==0)
+							ExclusaoUsuarios(D, RegUsu);
+							if (strcmp(RegUsu.Login, "")==0)
 								Opcao = 27;
+							break;	
+
+					case 'K':
+							break;	
+
+					case 'L':
+							break;	
+
+					case 'M':
+							break;	
+
+					case 'N':
 							break;	
 				}
 			}while(Opcao!=27);
-		else if (Usu.Tipo=='S')
+		else if (RegUsu.Tipo=='S')
 		{
 			printf("\nSenha Incorreta!");
 			getch();
@@ -465,7 +475,7 @@ void MenuLogin(TpDescritor &D)
 		system("cls");
 		printf("\t\t** LOGIN DO USUARIO **\n\n");
 		printf("Login: ");
-		gets(Usu.Login);
+		gets(RegUsu.Login);
 	}
 }
 
