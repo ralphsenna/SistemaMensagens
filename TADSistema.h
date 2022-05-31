@@ -9,7 +9,7 @@ struct TpMensagem //578B
 	TpMensagem *MensAnt; //4B
 	TpMensagem *MensProx; //4B
 	TpData DataHora;
-	char Login[50],Assunto[50], Mensagem[500]; //50B + 500B + 20B = 570B
+	char LoginMens[50], Assunto[50], Mensagem[500]; //50B + 500B + 20B = 570B
 };
 
 struct TpUsuario //93B
@@ -170,6 +170,34 @@ void LimparUsuarios(TpServidor *Serv)
 	}
 }
 
+void LinkarMensagens(TpMensagem *Mens, char NovoLogin[50])
+{
+	if (Mens!=NULL)
+		while (Mens->MensProx!=NULL)
+		{
+			strcpy(Mens->LoginMens, NovoLogin);
+			Mens = Mens->MensProx;
+		}
+}
+
+void LinkarUsuarios(TpUsuario *Usu, char NovoDominio[30])
+{
+	TpMensagem *Mens=Usu->UsuMens;
+	char NovoLogin[50], *Div;
+	if (Usu!=NULL)
+		while (Usu->UsuProx!=NULL)
+		{
+			Div = strtok(Usu->Login, "@");
+			strcpy(NovoLogin, Div);
+			strcat(NovoLogin, "@");
+			Div = strtok(NULL, "@");
+			strcat(NovoLogin, Div);
+			strcpy(Usu->Login, NovoLogin);
+			LinkarMensagens(Mens, NovoLogin);
+			Usu = Usu->UsuProx;
+		}
+}
+
 void CadastrarServidorOrd(TpDescritor &D, TpServidor Serv)
 {
 	TpServidor *Novo, *Aux;
@@ -261,22 +289,12 @@ void ConsultarServidores(TpDescritor D)
 }
 
 //Não terminado
-void AlterarServidor(TpDescritor &D, char Dominio[30])
+void AlterarServidor(TpServidor *Serv, TpServidor RegServ)
 {
-	TpServidor *Serv;
-	char novoD[30];
-	Serv = BuscaServidor(D,Dominio,"");
-	printf("Digite o novo dominio ou digite ENTER para cancelar:\n");
-	scanf("%s",&novoD);
-	if(BuscaServidor(D,novoD,"")==NULL)
-	{
-		//Serv->Dominio = novoD;
-		//Serv = LinkarUsuarios(Serv);
-	}
-	else
-	{
-		printf("Servidor já existente\n");
-	}
+	TpUsuario *Usu=Serv->ServUsu;
+	strcpy(Serv->Dominio, RegServ.Dominio);
+	strcpy(Serv->Local, RegServ.Local);
+	LinkarUsuarios(Usu, Serv->Dominio);
 } 
 
 void ExcluirServidor(TpDescritor &D, char Dominio[30])
@@ -446,7 +464,7 @@ void ConsultarUsuarios(TpDescritor D)
 	}
 }
 
-//Não terminado
+//Não terminado (Mensagens não incluídas)
 /* void AlterarUsuarios()
 {
 
@@ -483,13 +501,14 @@ void ExcluirUsuario(TpDescritor D, char Login[50])
 }
 
 //Não terminado
-TpMensagem* CadastrarMensagem(TpMensagem *Mens,char Login[50],char Mensagem[500], char Assunto[50])
+/* TpMensagem* CadastrarMensagem(TpMensagem *Mens,TpMensagem &Reg)
 {
 	TpMensagem *Novo,*Aux;
 	Novo = new TpMensagem;
-	strcpy(Novo->Assunto,Assunto);
-	strcpy(Novo->Mensagem,Mensagem);
-	strcpy(Novo->Login,Login);
+	strcpy(Novo->Assunto,Reg.Assunto);
+	strcpy(Novo->Mensagem,Reg.Mensagem);
+	strcpy(Novo->LoginMens,Reg.Login);
+	Novo->DataHora = MostraHoraAtual;
 	Novo->MensProx = NULL;
 	Aux = Mens;
 	while(Aux->MensProx!=NULL)
@@ -498,6 +517,49 @@ TpMensagem* CadastrarMensagem(TpMensagem *Mens,char Login[50],char Mensagem[500]
 	Novo -> MensAnt = Aux;
 	return Mens;
 }
+
+//Não terminado
+void ConsultarMensagem(TpMensagem *Mens)
+{
+	TpMensagem *Aux;
+	char Assunto[50];
+	if(Mens==NULL)
+		printf("\n\n Nao ha mensagens!\n");
+	else
+	{
+		printf("\n\nQual o assunto da mensagem que procura?\n");
+		gets(Assunto);
+		while(strcmp(Assunto,"\0")!=0)
+		{
+			Aux = Mens;
+			while(Aux->MensProx!=NULL && strcpy(Aux->Assunto,Assunto)!=0)
+				Aux = Aux->MensProx;
+			if(strcpy(Aux->Assunto,Assunto)==0)
+			{
+				printf("\nMandado por: %s\nAssunto: %s\n\n\t%s",Aux->Login,Aux->Assunto,Aux->Mensagem);
+				if(Aux->DataHora.dia<10)
+					printf("Data: 0%d/",Aux->DataHora.dia);
+				else
+					printf("Data: %d/",Aux->DataHora.dia);
+				if(Aux->DataHora.mes<10)
+					printf("0%d/",Aux->DataHora.mes);
+				else
+					printf("%d/",Aux->DataHora.mes);
+				printf("%d\n",Aux->DataHora.ano);
+				printf("Hora: %d:",Aux->DataHora.hora);
+				if(Aux->DataHora.minuto<10)
+					printf("0%d",Aux->DataHora.minuto);
+				else
+					printf("%d\n",Aux->DataHora.minuto);
+			}
+			else
+				printf("Assunto nao encontrado:");
+			getch();
+			printf("\n\nQual o assunto da mensagem que procura?\n");
+			gets(Assunto);
+		}
+	}
+} */
 
 //Não terminado
 TpMensagem* ExcluirMensagem(char Assunto[50],TpMensagem *Mens)
@@ -547,24 +609,4 @@ TpMensagem* ExcluirMensagem(char Assunto[50],TpMensagem *Mens)
 	data.hora = lt->tm_hour;
 	data.minuto = lt->tm_min;
 	return data;
-}
-
-TpServidor* LinkarUsuarios(TpServidor *Serv)
-{
-	TpUsuario *UAux;
-	char novoD[30];
-	strcpy(novoD,Serv->Dominio);
-	UAux = Serv->ServUsu;
-	if (UAuxF!=NULL)
-	{
-		while (UAux->UsuProx!=NULL)
-		{
-			strcpy(novoD, strtok(UAux->Login, "@"));
-			strcat(novoD, '@');
-			strcat(novoD, Serv->Dominio);
-			UAux = UAux->UsuProx;
-		}
-	}
-	return Serv;
-}
-*/
+} */

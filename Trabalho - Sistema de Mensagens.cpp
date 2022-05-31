@@ -172,6 +172,50 @@ void CadastroServidores(TpDescritor &D)
 	}
 }
 
+//Não terminado
+void AlteracaoServidor(TpDescritor &D)
+{
+	TpServidor *Serv, RegServ, BackRegServ;
+	if (Serv==NULL)
+	{
+		printf("\n\nLista de Servidores Vazia!\n");
+		getch();
+	}
+	else
+	{
+		printf("\n\n** CONSULTA DE SERVIDORES **\n\n");
+		printf("Qual nome do Dominio do Servidor que deseja alterar?\n");
+		gets(RegServ.Dominio);
+		while (strcmp(RegServ.Dominio, "\0")!=0)
+		{
+			Serv = BuscaServidor(D, RegServ.Dominio, "");
+			if (Serv!=NULL)
+			{
+				strcpy(BackRegServ.Dominio, Serv->Dominio);
+				strcpy(BackRegServ.Local, Serv->Local);
+				printf("\nDominio: %s\tLocal: %s\nEncontrado na lista de Servidores\n\n", Serv->Dominio, Serv->Local);
+				printf("Novo Dominio: ");
+				gets(RegServ.Dominio);
+				if (!BuscaServidor(D, RegServ.Dominio, ""))
+				{
+					printf("Novo Local: ");
+					gets(RegServ.Local);
+					AlterarServidor(Serv, RegServ);
+					printf("\nDominio: %s Local: %s\nFoi Alterado para\n", BackRegServ.Dominio, BackRegServ.Local);
+					printf("\nDominio: %s Local: %s\n", RegServ.Dominio, RegServ.Local);
+				}
+				else
+					printf("\nEste Servidor ja esta cadastrado!\n");
+			}
+			else
+				printf("\nEste Servidor nao esta cadastrado!\n");
+			getch();
+			printf("Qual nome do Dominio do Servidor que deseja alterar?\n");
+			gets(RegServ.Dominio);
+		}
+	}
+}
+
 void ExclusaoServidores(TpDescritor &D)
 {
 	TpServidor *Serv;
@@ -420,7 +464,7 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'D':
-							//AlterarServidores();
+							//AlteracaoServidor();
 							break;
 
 					case 'E':
@@ -440,7 +484,7 @@ void MenuLogin(TpDescritor &D)
 							break;		
 
 					case 'I':
-							//AlterarUsuarios();
+							//AlteracaoUsuarios();
 							break;	
 
 					case 'J':
