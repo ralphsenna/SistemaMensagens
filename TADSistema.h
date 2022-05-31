@@ -190,9 +190,9 @@ void CadastrarServidorOrd(TpDescritor &D, TpServidor Serv)
 			Aux = D.Inicio->ServProx;
 			while (strcmp(Serv.Dominio, Aux->Dominio)>0)
                 Aux = Aux->ServProx;
-			Novo->ServProx = Aux->ServProx;
-			Novo->ServAnt = Aux;
-			Aux->ServProx = Novo;
+			Novo->ServProx = Aux;
+			Novo->ServAnt = Aux->ServAnt;
+			Aux->ServAnt->ServProx = Novo;
 			Novo->ServProx->ServAnt = Novo;
 		}
 	}
@@ -296,7 +296,7 @@ void CadastrarUsuarioOrd(TpDescritor &D, TpUsuario Usu)
 	}
 	else
 	{
-		Aux = Serv->ServUsu->UsuProx;
+		Aux = Serv->ServUsu;
 		while (Aux->UsuProx!=NULL && strcmp(Novo->Login, Aux->Login)>0)
 			Aux = Aux->UsuProx;
 		if (strcmp(Novo->Login, Aux->Login)<=0)
@@ -334,7 +334,7 @@ void ListarUsuarios(TpDescritor D)
 				if (UsuAux!=NULL)
 				{
 					printf("-----------------------------------------\n");
-					printf("| Dominio: %-29s |\n", ServAux->Dominio);
+					printf("| Dominio: %-28s |\n", ServAux->Dominio);
 					printf("-----------------------------------------\n");
 					printf("| Login do Usuario              | Tipo  |\n");
 					printf("-----------------------------------------\n");

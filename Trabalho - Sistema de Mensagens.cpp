@@ -10,7 +10,7 @@
 void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, TpServidor *Serv, TpUsuario *Usu, TpMensagem *Mens)
 {
 	TpServidor SAtual;
-	TpUsuario UAtual;
+	TpUsuario UAtual, *UAux;
 	//TpMensagem MAtual;
 	rewind(ArqServ);
 	rewind(ArqUsu);
@@ -52,9 +52,13 @@ void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, 
 				D.Fim->ServUsu = Usu;
 			else
 			{
-				D.Fim->ServUsu->UsuProx = Usu;
-				Usu->UsuAnt = D.Fim->ServUsu;
-			}			
+				UAux->UsuProx = Usu;
+				Usu->UsuAnt = UAux;
+
+				/* D.Fim->ServUsu->UsuProx = Usu;
+				Usu->UsuAnt = D.Fim->ServUsu; */
+			}		
+			UAux = Usu;	
 			fread(&UAtual, sizeof(TpUsuario), 1, ArqUsu);
 		}
 		fread(&SAtual, sizeof(TpServidor), 1, ArqServ);
