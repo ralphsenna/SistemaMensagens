@@ -391,7 +391,6 @@ void ListarUsuarios(TpDescritor D)
 
 } */
 
-//Não terminado
 void ExcluirUsuario(TpDescritor D, char Login[50])
 {
 	TpServidor *ServAux=BuscaServidor(D, "", Login);
@@ -399,28 +398,26 @@ void ExcluirUsuario(TpDescritor D, char Login[50])
 	if (strcmp(UsuAux->Login, Login)==0)
 	{
 		LimparMensagens(UsuAux);
+		ServAux->ServUsu = UsuAux->UsuProx;
 		UsuAux->UsuProx->UsuAnt = NULL;
 		delete(UsuAux);
 	}
 	else
 	{
-		while (UsuAux->UsuProx!=NULL && strcmp(UsuAux->Login, Login)!=0)
+		while (UsuAux!=NULL && strcmp(UsuAux->Login, Login)!=0)
 			UsuAux = UsuAux->UsuProx;
-		if (strcmp(UsuAux->Login, Login)==0)
+		if(UsuAux->UsuProx==NULL)
 		{
-			if(UsuAux->UsuProx==NULL)
-			{
-				LimparMensagens(UsuAux);
-				UsuAux->UsuAnt->UsuProx = NULL;
-			}
-			else
-			{
-				LimparMensagens(UsuAux);
-				UsuAux->UsuProx->UsuAnt = UsuAux->UsuAnt;
-				UsuAux->UsuAnt->UsuProx = UsuAux->UsuProx;
-			}
-			delete(UsuAux);
+			LimparMensagens(UsuAux);
+			UsuAux->UsuAnt->UsuProx = NULL;
 		}
+		else
+		{
+			LimparMensagens(UsuAux);
+			UsuAux->UsuProx->UsuAnt = UsuAux->UsuAnt;
+			UsuAux->UsuAnt->UsuProx = UsuAux->UsuProx;
+		}
+		delete(UsuAux);
 	}
 }
 

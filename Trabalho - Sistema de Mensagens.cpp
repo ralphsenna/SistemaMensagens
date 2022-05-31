@@ -8,7 +8,7 @@
 //Declaração de Funções
 void MenuLogin(TpDescritor &D);
 
-//Funções
+//Funções de Chamada do TAD
 //Não terminado (Mensagens não incluídas)
 void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, TpServidor *Serv, TpUsuario *Usu, TpMensagem *Mens)
 {
@@ -245,7 +245,7 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 	}
 }
 
-void ExclusaoUsuarios(TpDescritor &D, TpUsuario Usuario)
+void ExclusaoUsuarios(TpDescritor &D, TpUsuario &Usuario)
 {
 	TpServidor *Serv;
 	TpUsuario *Usu;
@@ -255,23 +255,22 @@ void ExclusaoUsuarios(TpDescritor &D, TpUsuario Usuario)
 	{
 		printf("Qual Usuario deseja excluir?\n");
 		gets(Login);
-		while (strcmp(Login, "\0")!=0)
+		Serv = BuscaServidor(D, "", Usuario.Login);
+		if (strcmp(Usuario.Login, Login)==0 && strcmp(Serv->Dominio, "admin")!=0)
 		{
-			Serv = BuscaServidor(D, "", Usuario.Login);
-			if (strcmp(Usuario.Login, Login)==0 && strcmp(Serv->Dominio, "admin")!=0)
+			printf("\nTem certeza que deseja excluir sua Conta (S ou N)?\n");
+			if (toupper(getch())=='S')
 			{
-				printf("\nTem certeza que deseja excluir sua Conta (S ou N)?\n");
-				if (toupper(getch())=='S')
-				{
-					Usu = BuscaUsuario(D, Usuario.Login);
-					ExcluirUsuario(D, Usuario.Login);
-					printf("\nUsuario %s excluido!\n", Usuario.Login);
-					MenuLogin(D);
-				}
-				else
-					printf("\nOpercao Cancelada!\n");
+				Usu = BuscaUsuario(D, Usuario.Login);
+				ExcluirUsuario(D, Usuario.Login);
+				printf("\nUsuario %s excluido!\n", Usuario.Login);
+				strcpy(Usuario.Login, "");
 			}
-			else if (strcmp(Usuario.Login, Login)!=0)
+			else
+				printf("\nOpercao Cancelada!\n");
+		}
+		else if (strcmp(Usuario.Login, Login)!=0)
+			while (strcmp(Login, "\0")!=0)
 			{
 				Usu = BuscaUsuario(D, Login);
 				if (Usu!=NULL)
@@ -281,13 +280,13 @@ void ExclusaoUsuarios(TpDescritor &D, TpUsuario Usuario)
 				}
 				else
 					printf("\nEste Usuario nao esta cadastrado!\n");
+				getch();
+				printf("\nQual Usuario deseja excluir?\n");
+				gets(Login);
 			}
-			else
-				printf("\nUsuario Padrao Admin nao pode ser excluido!\n");
-			getch();
-			printf("\nQual Usuario deseja excluir?\n");
-			gets(Login);
-		}
+		else
+			printf("\nUsuario Padrao Admin nao pode ser excluido!\n");
+		getch();
 	}
 	else
 	{
@@ -296,11 +295,11 @@ void ExclusaoUsuarios(TpDescritor &D, TpUsuario Usuario)
 		{
 			Usu = BuscaUsuario(D, Usuario.Login);
 			ExcluirUsuario(D, Usuario.Login);
-			printf("\nUsuario %s excluido!\n", Usuario.Login);
-			MenuLogin(D);
+			printf("\n\nUsuario %s excluido!\n", Usuario.Login);
+			strcpy(Usuario.Login, "");
 		}
 		else
-			printf("\nOpercao Cancelada!\n");
+			printf("\n\nOpercao Cancelada!\n");
 		getch();
 	}
 }
@@ -399,6 +398,8 @@ void MenuLogin(TpDescritor &D)
 
 					case 'H':
 							ExclusaoUsuarios(D, Usu);
+							if (strcmp(Usu.Login, "")==0)
+								Opcao = 27;
 							break;
 				}
 			}while(Opcao!=27);
@@ -446,6 +447,8 @@ void MenuLogin(TpDescritor &D)
 
 					case 'J':
 							ExclusaoUsuarios(D, Usu);
+							if (strcmp(Usu.Login, "")==0)
+								Opcao = 27;
 							break;	
 				}
 			}while(Opcao!=27);
