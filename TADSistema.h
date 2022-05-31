@@ -1,3 +1,4 @@
+//Declaração de Structs
 struct TpMensagem //578B
 {
 	TpMensagem *MensAnt; //4B
@@ -69,6 +70,7 @@ TpUsuario* BuscaUsuario(TpDescritor D, char Login[50])
 	TpServidor *SAtual=BuscaServidor(D, "", Login);
 	TpUsuario *UAtual=SAtual->ServUsu;
 	char LoginBackup[50];
+	strcpy(LoginBackup, Login);
 	while (UAtual!=NULL && strcmp(UAtual->Login, Login)!=0)
 		UAtual = UAtual->UsuProx;
 	strcpy(Login, LoginBackup);
@@ -148,7 +150,7 @@ void LimparUsuarios(TpServidor *Serv)
 			UAuxF = UAuxF->UsuProx;
 		while (UAuxF->UsuAnt!=NULL)
 		{
-			//LimparMensagens(UAuxF);
+			LimparMensagens(UAuxF);
 			UAuxF = UAuxF->UsuAnt;
 			delete(UAuxF->UsuProx);
 		}
@@ -384,21 +386,27 @@ void ListarUsuarios(TpDescritor D)
 }
 
 //Não terminado
-TpUsuario* ExcluirUsuario(TpUsuario *Usu,char Login[50])
+/* void AlterarUsuarios()
 {
-	TpUsuario *UsuAux;
-	UsuAux = Usu;
-	if(strcmp(UsuAux->Login,Login)==0)
+
+} */
+
+//Não terminado
+void ExcluirUsuario(TpDescritor D, char Login[50])
+{
+	TpServidor *ServAux=BuscaServidor(D, "", Login);
+	TpUsuario *UsuAux=ServAux->ServUsu;
+	if (strcmp(UsuAux->Login, Login)==0)
 	{
-		Usu->UsuProx->UsuAnt = Usu;
-		Usu = Usu->UsuProx;
+		LimparMensagens(UsuAux);
+		UsuAux->UsuProx->UsuAnt = NULL;
 		delete(UsuAux);
 	}
 	else
 	{
-		while(UsuAux->UsuProx!=NULL && strcmp(UsuAux->Login,Login)!=0)
-			UsuAux = UsuAux -> UsuProx;
-		if(strcmp(UsuAux->Login,Login)==0)
+		while (UsuAux->UsuProx!=NULL && strcmp(UsuAux->Login, Login)!=0)
+			UsuAux = UsuAux->UsuProx;
+		if (strcmp(UsuAux->Login, Login)==0)
 		{
 			if(UsuAux->UsuProx==NULL)
 			{
@@ -412,14 +420,8 @@ TpUsuario* ExcluirUsuario(TpUsuario *Usu,char Login[50])
 				UsuAux->UsuAnt->UsuProx = UsuAux->UsuProx;
 			}
 			delete(UsuAux);
-			printf("Usuario deletado\n");
-		}
-		else
-		{
-			printf("Usuario nao encontrado\n");
 		}
 	}
-	return Usu;
 }
 
 //Não terminado
@@ -454,3 +456,65 @@ TpMensagem* ExcluirMensagem(char Assunto[50],TpMensagem *Mens)
 	}
 	return Mens;
 }
+
+//Não terminado
+/* void MostraHoraAtual()
+{
+	char data[30],buffer[10];
+	time_t agr = time(0);
+	tm* lt = localtime(&agr);
+	strcpy(data,"");
+	if(lt->tm_hour<10)
+	{
+		strcat(data,"0");
+		strcat(data,itoa(lt->tm_hour,buffer,10));
+	}
+	else
+		strcat(data,itoa(lt->tm_hour,buffer,10));
+	strcat(data,":");
+	if(lt->tm_min<10)
+	{
+		strcat(data,"0");
+		strcat(data,itoa(lt->tm_min,buffer,10));
+	}
+	else
+		strcat(data,itoa(lt->tm_min,buffer,10));
+	printf("%s",data);
+}
+
+TpServidor* LinkarUsuarios(TpServidor *Serv)
+{
+	TpUsuario *UAux;
+	char novoD[30];
+	strcpy(novoD,Serv->Dominio);
+	UAux = Serv->ServUsu;
+	if (UAuxF!=NULL)
+	{
+		while (UAux->UsuProx!=NULL)
+		{
+			strcpy(novoD, strtok(UAux->Login, "@"));
+			strcat(novoD, '@');
+			strcat(novoD, Serv->Dominio);
+			UAux = UAux->UsuProx;
+		}
+	}
+	return Serv;
+}
+
+void AlterarServidor(TpDescritor &D, char Dominio[30])
+{
+	TpServidor *Serv;
+	char novoD[30];
+	Serv = BuscaServidor(D,Dominio,"");
+	printf("Digite o novo dominio ou digite ENTER para cancelar:\n");
+	scanf("%s",&novoD);
+	if(BuscaServidor(D,novoD,"")==NULL)
+	{
+		Serv->Dominio = novoD;
+		Serv = LinkarUsuarios(Serv);
+	}
+	else
+	{
+		printf("Servidor já existente\n");
+	}
+} */
