@@ -5,8 +5,6 @@
 #include <windows.h>
 #include "TADSistema.h"
 
-//Declaração de Funções
-void MenuLogin(TpDescritor &D);
 
 //Funções de Chamada do TAD
 //Não terminado (Mensagens não incluídas)
@@ -172,8 +170,7 @@ void CadastroServidores(TpDescritor &D)
 	}
 }
 
-//Não terminado
-void AlteracaoServidor(TpDescritor &D)
+void AlteracaoServidores(TpDescritor D)
 {
 	TpServidor *Serv, RegServ, BackRegServ;
 	if (Serv==NULL)
@@ -183,34 +180,39 @@ void AlteracaoServidor(TpDescritor &D)
 	}
 	else
 	{
-		printf("\n\n** CONSULTA DE SERVIDORES **\n\n");
+		printf("\n\n** ALTERACAO DE SERVIDORES **\n\n");
 		printf("Qual nome do Dominio do Servidor que deseja alterar?\n");
 		gets(RegServ.Dominio);
 		while (strcmp(RegServ.Dominio, "\0")!=0)
 		{
-			Serv = BuscaServidor(D, RegServ.Dominio, "");
-			if (Serv!=NULL)
+			if (strcmp(RegServ.Dominio, "admin")!=0)
 			{
-				strcpy(BackRegServ.Dominio, Serv->Dominio);
-				strcpy(BackRegServ.Local, Serv->Local);
-				printf("\nDominio: %s\tLocal: %s\nEncontrado na lista de Servidores\n\n", Serv->Dominio, Serv->Local);
-				printf("Novo Dominio: ");
-				gets(RegServ.Dominio);
-				if (!BuscaServidor(D, RegServ.Dominio, ""))
+				Serv = BuscaServidor(D, RegServ.Dominio, "");
+				if (Serv!=NULL)
 				{
-					printf("Novo Local: ");
-					gets(RegServ.Local);
-					AlterarServidor(Serv, RegServ);
-					printf("\nDominio: %s Local: %s\nFoi Alterado para\n", BackRegServ.Dominio, BackRegServ.Local);
-					printf("\nDominio: %s Local: %s\n", RegServ.Dominio, RegServ.Local);
+					strcpy(BackRegServ.Dominio, Serv->Dominio);
+					strcpy(BackRegServ.Local, Serv->Local);
+					printf("\nDominio: %s\tLocal: %s\nEncontrado na lista de Servidores\n\n", Serv->Dominio, Serv->Local);
+					printf("Novo Dominio: ");
+					gets(RegServ.Dominio);
+					if (!BuscaServidor(D, RegServ.Dominio, ""))
+					{
+						printf("Novo Local: ");
+						gets(RegServ.Local);
+						AlterarServidor(Serv, RegServ);
+						printf("\nDominio: %s\tLocal: %s\n\nFoi Alterado para:", BackRegServ.Dominio, BackRegServ.Local);
+						printf("\nDominio: %s\tLocal: %s\n", RegServ.Dominio, RegServ.Local);
+					}
+					else
+						printf("\nEste Servidor ja esta cadastrado!\n");
 				}
 				else
-					printf("\nEste Servidor ja esta cadastrado!\n");
+					printf("\nEste Servidor nao esta cadastrado!\n");
 			}
 			else
-				printf("\nEste Servidor nao esta cadastrado!\n");
+				printf("\nO servidor admin nao pode ser alterado!\n");
 			getch();
-			printf("Qual nome do Dominio do Servidor que deseja alterar?\n");
+			printf("\nQual nome do Dominio do Servidor que deseja alterar?\n");
 			gets(RegServ.Dominio);
 		}
 	}
@@ -285,6 +287,12 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 		gets(Usu.Login);
 	}
 }
+
+//Não terminado
+/* void AlteracaoUsuarios()
+{
+
+} */
 
 void ExclusaoUsuarios(TpDescritor &D, TpUsuario &Usuario)
 {
@@ -464,7 +472,7 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'D':
-							//AlteracaoServidor();
+							AlteracaoServidores(D);
 							break;
 
 					case 'E':

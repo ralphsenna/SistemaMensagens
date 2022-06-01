@@ -173,7 +173,7 @@ void LimparUsuarios(TpServidor *Serv)
 void LinkarMensagens(TpMensagem *Mens, char NovoLogin[50])
 {
 	if (Mens!=NULL)
-		while (Mens->MensProx!=NULL)
+		while (Mens!=NULL)
 		{
 			strcpy(Mens->LoginMens, NovoLogin);
 			Mens = Mens->MensProx;
@@ -185,13 +185,12 @@ void LinkarUsuarios(TpUsuario *Usu, char NovoDominio[30])
 	TpMensagem *Mens=Usu->UsuMens;
 	char NovoLogin[50], *Div;
 	if (Usu!=NULL)
-		while (Usu->UsuProx!=NULL)
+		while (Usu!=NULL)
 		{
 			Div = strtok(Usu->Login, "@");
 			strcpy(NovoLogin, Div);
 			strcat(NovoLogin, "@");
-			Div = strtok(NULL, "@");
-			strcat(NovoLogin, Div);
+			strcat(NovoLogin, NovoDominio);
 			strcpy(Usu->Login, NovoLogin);
 			LinkarMensagens(Mens, NovoLogin);
 			Usu = Usu->UsuProx;
@@ -272,7 +271,8 @@ void ConsultarServidores(TpDescritor D)
 	}
 	else
 	{
-		printf("\n\nQual nome do Dominio do Servidor que procura?\n");
+		printf("\n\n** CONSULTA DE SERVIDORES **\n\n");
+		printf("Qual nome do Dominio do Servidor que procura?\n");
 		gets(Dominio);
 		while (strcmp(Dominio, "\0")!=0)
 		{
@@ -288,7 +288,6 @@ void ConsultarServidores(TpDescritor D)
 	}
 }
 
-//Não terminado
 void AlterarServidor(TpServidor *Serv, TpServidor RegServ)
 {
 	TpUsuario *Usu=Serv->ServUsu;
@@ -448,7 +447,8 @@ void ConsultarUsuarios(TpDescritor D)
 	}
 	else
 	{
-		printf("\n\nQual Usuario deseja pesquisar?\n");
+		printf("\n\n** CONSULTA DE USUARIOS **\n\n");
+		printf("Qual Usuario deseja pesquisar?\n");
 		gets(Login);
 		while (strcmp(Login, "\0")!=0)
 		{
