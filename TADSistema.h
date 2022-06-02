@@ -184,17 +184,18 @@ void LinkarUsuarios(TpUsuario *Usu, char NovoDominio[30])
 {
 	TpMensagem *Mens=Usu->UsuMens;
 	char NovoLogin[50], *Div;
-	if (Usu!=NULL)
-		while (Usu!=NULL)
-		{
-			Div = strtok(Usu->Login, "@");
-			strcpy(NovoLogin, Div);
-			strcat(NovoLogin, "@");
-			strcat(NovoLogin, NovoDominio);
-			strcpy(Usu->Login, NovoLogin);
-			LinkarMensagens(Mens, NovoLogin);
-			Usu = Usu->UsuProx;
-		}
+	if (strcmp(NovoDominio, "")!=0)
+		if (Usu!=NULL)
+			while (Usu!=NULL)
+			{
+				Div = strtok(Usu->Login, "@");
+				strcpy(NovoLogin, Div);
+				strcat(NovoLogin, "@");
+				strcat(NovoLogin, NovoDominio);
+				strcpy(Usu->Login, NovoLogin);
+				LinkarMensagens(Mens, NovoLogin);
+				Usu = Usu->UsuProx;
+			}
 }
 
 void CadastrarServidorOrd(TpDescritor &D, TpServidor Serv)
@@ -293,7 +294,7 @@ void AlterarServidor(TpServidor *Serv, TpServidor RegServ)
 	TpUsuario *Usu=Serv->ServUsu;
 	strcpy(Serv->Dominio, RegServ.Dominio);
 	strcpy(Serv->Local, RegServ.Local);
-	LinkarUsuarios(Usu, Serv->Dominio);
+	LinkarUsuarios(Usu, RegServ.Dominio);
 } 
 
 void ExcluirServidor(TpDescritor &D, char Dominio[30])
@@ -464,11 +465,14 @@ void ConsultarUsuarios(TpDescritor D)
 	}
 }
 
-//Não terminado (Mensagens não incluídas)
-/* void AlterarUsuarios()
+void AlterarUsuarios(TpUsuario *Usu, TpUsuario RegUsu)
 {
-
-} */
+	TpMensagem *Mens=Usu->UsuMens;
+	strcpy(Usu->Login, RegUsu.Login);
+	strcpy(Usu->Senha, RegUsu.Senha);
+	Usu->Tipo = RegUsu.Tipo;
+	LinkarMensagens(Mens, RegUsu.Login);
+}
 
 void ExcluirUsuario(TpDescritor D, char Login[50])
 {

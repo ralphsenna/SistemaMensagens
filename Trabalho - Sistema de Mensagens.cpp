@@ -170,51 +170,46 @@ void CadastroServidores(TpDescritor &D)
 	}
 }
 
-void AlteracaoServidores(TpDescritor D)
+void AlteracaoServidores(TpDescritor D, char Login[50])
 {
 	TpServidor *Serv, RegServ, BackRegServ;
-	if (Serv==NULL)
+	TpUsuario *Usu;
+	printf("\n\n** ALTERACAO DE SERVIDORES **\n\n");
+	printf("Qual nome do Dominio do Servidor que deseja alterar?\n");
+	gets(RegServ.Dominio);
+	while (strcmp(RegServ.Dominio, "\0")!=0)
 	{
-		printf("\n\nLista de Servidores Vazia!\n");
-		getch();
-	}
-	else
-	{
-		printf("\n\n** ALTERACAO DE SERVIDORES **\n\n");
-		printf("Qual nome do Dominio do Servidor que deseja alterar?\n");
-		gets(RegServ.Dominio);
-		while (strcmp(RegServ.Dominio, "\0")!=0)
+		if (strcmp(RegServ.Dominio, "admin")!=0)
 		{
-			if (strcmp(RegServ.Dominio, "admin")!=0)
+			Serv = BuscaServidor(D, RegServ.Dominio, "");
+			if (Serv!=NULL)
 			{
-				Serv = BuscaServidor(D, RegServ.Dominio, "");
-				if (Serv!=NULL)
+				strcpy(BackRegServ.Dominio, Serv->Dominio);
+				strcpy(BackRegServ.Local, Serv->Local);
+				printf("\nDominio: %s\tLocal: %s\nEncontrado na lista de Servidores\n\n", Serv->Dominio, Serv->Local);
+				printf("Novo Dominio: ");
+				gets(RegServ.Dominio);
+				if (!BuscaServidor(D, RegServ.Dominio, ""))
 				{
-					strcpy(BackRegServ.Dominio, Serv->Dominio);
-					strcpy(BackRegServ.Local, Serv->Local);
-					printf("\nDominio: %s\tLocal: %s\nEncontrado na lista de Servidores\n\n", Serv->Dominio, Serv->Local);
-					printf("Novo Dominio: ");
-					gets(RegServ.Dominio);
-					if (!BuscaServidor(D, RegServ.Dominio, ""))
-					{
-						printf("Novo Local: ");
-						gets(RegServ.Local);
-						AlterarServidor(Serv, RegServ);
-						printf("\nDominio: %s\tLocal: %s\n\nFoi Alterado para:", BackRegServ.Dominio, BackRegServ.Local);
-						printf("\nDominio: %s\tLocal: %s\n", RegServ.Dominio, RegServ.Local);
-					}
-					else
-						printf("\nEste Servidor ja esta cadastrado!\n");
+					printf("Novo Local: ");
+					gets(RegServ.Local);
+					AlterarServidor(Serv, RegServ);
+					printf("\nDominio: %s\tLocal: %s\n\nFoi Alterado para:", BackRegServ.Dominio, BackRegServ.Local);
+					printf("\nDominio: %s\tLocal: %s\n", RegServ.Dominio, RegServ.Local);
+					Usu = BuscaUsuario(D, Login);
+					strcpy(Login, Usu->Login);
 				}
 				else
-					printf("\nEste Servidor nao esta cadastrado!\n");
+					printf("\nEste Servidor ja esta cadastrado!\n");
 			}
 			else
-				printf("\nO servidor admin nao pode ser alterado!\n");
-			getch();
-			printf("\nQual nome do Dominio do Servidor que deseja alterar?\n");
-			gets(RegServ.Dominio);
+				printf("\nEste Servidor nao esta cadastrado!\n");
 		}
+		else
+			printf("\nO servidor admin nao pode ser alterado!\n");
+		getch();
+		printf("\nQual nome do Dominio do Servidor que deseja alterar?\n");
+		gets(RegServ.Dominio);
 	}
 }
 
@@ -267,12 +262,12 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 				if (Tipo=='A')
 				{
 					printf("Tipo de Usuario (A) Administrador ou (C) Comum: ");
-					Usu.Tipo = toupper(getche());
+					scanf("%c", &Usu.Tipo);
 				}
 				else
 					Usu.Tipo = 'C';
 				CadastrarUsuarioOrd(D, Usu);
-				printf("\n\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
+				printf("\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
 			}
 			else
 				printf("\nUsuario ja existente neste Servidor!\n");
@@ -288,37 +283,106 @@ void CadastroUsuarios(TpDescritor &D, char Tipo)
 	}
 }
 
-//Não terminado
-/* void AlteracaoUsuarios()
+void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 {
+	TpServidor *Serv;
+	TpUsuario *Usu, RegUsu, BackRegUsu;
+	printf("\n\n** ALTERACAO DE USUARIOS **\n\n");
+	if (RegUsuAux.Tipo=='A')
+	{
+		printf("Qual conta de Usuario deseja alterar?\n");
+		gets(RegUsu.Login);
+		while (strcmp(RegUsu.Login, "\0")!=0)
+		{
+			Usu = BuscaUsuario(D, RegUsu.Login);
+			if (Usu!=NULL)
+			{
+				strcpy(BackRegUsu.Login, Usu->Login);
+				strcpy(BackRegUsu.Senha, Usu->Senha);
+				BackRegUsu.Tipo = Usu->Tipo;
+				printf("\nLogin: %s\tSenha: %s\tTipo: %c\nEncontrado na lista de Usuarios\n\n", Usu->Login, Usu->Senha, Usu->Tipo);
+				printf("Novo Login (sem o Dominio): ");
+				gets(RegUsu.Login);
+				strcat(RegUsu.Login, "@");
+				Serv = BuscaServidor(D, "", RegUsuAux.Login);
+				strcat(RegUsu.Login, Serv->Dominio);
+				if (!BuscaUsuario(D, RegUsu.Login))
+				{
+					printf("Nova Senha: ");
+					gets(RegUsu.Senha);
+					if (strcmp(Serv->Dominio, "admin")!=0)
+					{
+						printf("Novo Tipo: ");
+						scanf("%c", &RegUsu.Tipo);
+					}
+					else
+						RegUsu.Tipo = Usu->Tipo;
+					AlterarUsuarios(Usu, RegUsu);
+					printf("\nLogin: %s\tSenha: %s\tTipo: %c\n\nFoi Alterado para:", BackRegUsu.Login, BackRegUsu.Senha, BackRegUsu.Tipo);
+					printf("\nLogin: %s\tSenha: %s\tTipo: %c\n", RegUsu.Login, RegUsu.Senha, RegUsu.Tipo);
+					RegUsuAux = RegUsu;
+				}
+				else
+					printf("\nEste Usuario ja esta cadastrado!\n");
+			}
+			getch();
+			if (RegUsuAux.Tipo!='C')
+			{
+				printf("\nQual conta de Usuario deseja alterar?\n");
+				gets(RegUsu.Login);
+			}
+		}
+	}
+	else
+	{
+		BackRegUsu = RegUsuAux;
+		printf("\n\nLogin: %s\tSenha: %s\tTipo: %c\nEncontrado na lista de Usuarios\n\n", RegUsuAux.Login, RegUsuAux.Senha, RegUsuAux.Tipo);
+		printf("Novo Login (sem o Dominio): ");
+		gets(RegUsu.Login);
+		strcat(RegUsu.Login, "@");
+		Serv = BuscaServidor(D, "", RegUsuAux.Login);
+		strcat(RegUsu.Login, Serv->Dominio);
+		if (!BuscaUsuario(D, RegUsu.Login))
+		{
+			printf("Nova Senha: ");
+			gets(RegUsu.Senha);
+			RegUsu.Tipo = Usu->Tipo;
+			AlterarUsuarios(Usu, RegUsu);
+			printf("\nLogin: %s\tSenha: %s\tTipo: %c\n\nFoi Alterado para:", BackRegUsu.Login, BackRegUsu.Senha, BackRegUsu.Tipo);
+			printf("\nLogin: %s\tSenha: %s\tTipo: %c\n", RegUsu.Login, RegUsu.Senha, RegUsu.Tipo);
+			RegUsuAux = RegUsu;
+		}
+		else
+			printf("\nEste Usuario ja esta cadastrado!\n");
+		getch();
+	}
+}
 
-} */
-
-void ExclusaoUsuarios(TpDescritor &D, TpUsuario &Usuario)
+void ExclusaoUsuarios(TpDescritor &D, TpUsuario &RegUsu)
 {
 	TpServidor *Serv;
 	TpUsuario *Usu;
 	char Login[50];
 	printf("\n\n** EXCLUSAO DE USUARIOS **\n\n");
-	if (Usuario.Tipo=='A')
+	if (RegUsu.Tipo=='A')
 	{
 		printf("Qual Usuario deseja excluir?\n");
 		gets(Login);
-		Serv = BuscaServidor(D, "", Usuario.Login);
-		if (strcmp(Usuario.Login, Login)==0 && strcmp(Serv->Dominio, "admin")!=0)
+		Serv = BuscaServidor(D, "", RegUsu.Login);
+		if (strcmp(RegUsu.Login, Login)==0 && strcmp(Serv->Dominio, "admin")!=0)
 		{
 			printf("\nTem certeza que deseja excluir sua Conta (S ou N)?\n");
 			if (toupper(getch())=='S')
 			{
-				Usu = BuscaUsuario(D, Usuario.Login);
-				ExcluirUsuario(D, Usuario.Login);
-				printf("\nUsuario %s excluido!\n", Usuario.Login);
-				strcpy(Usuario.Login, "");
+				Usu = BuscaUsuario(D, RegUsu.Login);
+				ExcluirUsuario(D, RegUsu.Login);
+				printf("\nUsuario %s excluido!\n", RegUsu.Login);
+				strcpy(RegUsu.Login, "");
 			}
 			else
 				printf("\nOpercao Cancelada!\n");
 		}
-		else if (strcmp(Usuario.Login, Login)!=0)
+		else if (strcmp(RegUsu.Login, Login)!=0)
 			while (strcmp(Login, "\0")!=0)
 			{
 				Usu = BuscaUsuario(D, Login);
@@ -342,10 +406,10 @@ void ExclusaoUsuarios(TpDescritor &D, TpUsuario &Usuario)
 		printf("Tem certeza que deseja excluir sua Conta (S ou N)?\n");
 		if (toupper(getche())=='S')
 		{
-			Usu = BuscaUsuario(D, Usuario.Login);
-			ExcluirUsuario(D, Usuario.Login);
-			printf("\n\nUsuario %s excluido!\n", Usuario.Login);
-			strcpy(Usuario.Login, "");
+			Usu = BuscaUsuario(D, RegUsu.Login);
+			ExcluirUsuario(D, RegUsu.Login);
+			printf("\n\nUsuario %s excluido!\n", RegUsu.Login);
+			strcpy(RegUsu.Login, "");
 		}
 		else
 			printf("\n\nOpercao Cancelada!\n");
@@ -423,7 +487,6 @@ void MenuLogin(TpDescritor &D)
 				switch(Opcao)
 				{
 					case 'A':
-							
 							break;
 
 					case 'B':
@@ -444,6 +507,7 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'G':
+							AlteracaoUsuarios(D, RegUsu);
 							break;
 
 					case 'H':
@@ -472,7 +536,7 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'D':
-							AlteracaoServidores(D);
+							AlteracaoServidores(D, RegUsu.Login);
 							break;
 
 					case 'E':
@@ -492,7 +556,13 @@ void MenuLogin(TpDescritor &D)
 							break;		
 
 					case 'I':
-							//AlteracaoUsuarios();
+							AlteracaoUsuarios(D, RegUsu);
+							if (RegUsu.Tipo=='C')
+							{
+								printf("Tipo de Usuario alterado, efutue o Login novamente!\n");
+								getch();
+								Opcao = 27;
+							}
 							break;	
 
 					case 'J':
