@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <windows.h>
+#include <time.h>
 #include "TADSistema.h"
 
 
@@ -176,6 +177,7 @@ void AlteracaoServidores(TpDescritor D, char Login[50])
 	TpUsuario *Usu;
 	printf("\n\n** ALTERACAO DE SERVIDORES **\n\n");
 	printf("Qual nome do Dominio do Servidor que deseja alterar?\n");
+	fflush(stdin);
 	gets(RegServ.Dominio);
 	while (strcmp(RegServ.Dominio, "\0")!=0)
 	{
@@ -188,12 +190,14 @@ void AlteracaoServidores(TpDescritor D, char Login[50])
 				strcpy(BackRegServ.Local, Serv->Local);
 				printf("\nDominio: %s\tLocal: %s\nEncontrado na lista de Servidores\n\n", Serv->Dominio, Serv->Local);
 				printf("Novo Dominio: ");
+				fflush(stdin);
 				gets(RegServ.Dominio);
 				if (!BuscaServidor(D, RegServ.Dominio, ""))
 				{
 					printf("Novo Local: ");
+					fflush(stdin);
 					gets(RegServ.Local);
-					AlterarServidor(Serv, RegServ);
+					AlterarServidores(Serv, RegServ);
 					printf("\nDominio: %s\tLocal: %s\n\nFoi Alterado para:", BackRegServ.Dominio, BackRegServ.Local);
 					printf("\nDominio: %s\tLocal: %s\n", RegServ.Dominio, RegServ.Local);
 					Usu = BuscaUsuario(D, Login);
@@ -209,6 +213,7 @@ void AlteracaoServidores(TpDescritor D, char Login[50])
 			printf("\nO servidor admin nao pode ser alterado!\n");
 		getch();
 		printf("\nQual nome do Dominio do Servidor que deseja alterar?\n");
+		fflush(stdin);
 		gets(RegServ.Dominio);
 	}
 }
@@ -227,7 +232,7 @@ void ExclusaoServidores(TpDescritor &D)
 			Serv = BuscaServidor(D, Dominio, "");
 			if (Serv!=NULL)
 			{
-				ExcluirServidor(D, Dominio);
+				ExcluirServidores(D, Dominio);
 				printf("\nServidor %s excluido!\n", Dominio);
 			}
 			else
@@ -241,7 +246,7 @@ void ExclusaoServidores(TpDescritor &D)
 	}
 }
 
-void CadastroUsuarios(TpDescritor &D, char Tipo)
+void CadastroUsuarios(TpDescritor D, char Tipo)
 {
 	TpUsuario Usu;
 	char Resp;
@@ -358,7 +363,7 @@ void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 	}
 }
 
-void ExclusaoUsuarios(TpDescritor &D, TpUsuario &RegUsu)
+void ExclusaoUsuarios(TpDescritor D, TpUsuario &RegUsu)
 {
 	TpServidor *Serv;
 	TpUsuario *Usu;
@@ -414,6 +419,36 @@ void ExclusaoUsuarios(TpDescritor &D, TpUsuario &RegUsu)
 		else
 			printf("\n\nOpercao Cancelada!\n");
 		getch();
+	}
+}
+
+void EnviarMensagens(TpDescritor D)
+{
+	TpMensagem Mens;
+	printf("\n\n** ENVIO DE MENSAGENS **\n\n");
+	printf("Para qual Usuario deseja enviar?\n");
+	fflush(stdin);
+	gets(Mens.LoginMens);
+	while (strcmp(Mens.LoginMens, "\0")!=0)
+	{
+		if (BuscaUsuario(D, Mens.LoginMens))
+		{
+			printf("\nAssunto: ");
+			fflush(stdin);
+			gets(Mens.Assunto);
+			printf("Mensagem: ");
+			fflush(stdin);
+			gets(Mens.Mensagem);
+			RecebeDataHoraAtual(Mens.DataHora);
+			CadastrarMensagens(D, Mens);
+			printf("\nMensagem enviada para %s com sucesso!\n", Mens.LoginMens);
+		}
+		else
+			printf("\nUsuario nao existe!\n");
+		getch();
+		printf("\nPara qual Usuario deseja enviar?\n");
+		fflush(stdin);
+		gets(Mens.LoginMens);
 	}
 }
 
@@ -487,9 +522,11 @@ void MenuLogin(TpDescritor &D)
 				switch(Opcao)
 				{
 					case 'A':
+							EnviarMensagens(D);
 							break;
 
 					case 'B':
+							ListarMensagens(D, RegUsu.Login);
 							break;
 
 					case 'C':
@@ -572,9 +609,11 @@ void MenuLogin(TpDescritor &D)
 							break;	
 
 					case 'K':
+							EnviarMensagens(D);
 							break;	
 
 					case 'L':
+							ListarMensagens(D, RegUsu.Login);
 							break;	
 
 					case 'M':

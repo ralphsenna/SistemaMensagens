@@ -1,15 +1,10 @@
 //Declaração de Structs
-struct TpData //20B
-{
-	int Ano, Mes, Dia, Hora, Minuto; //4B + 4B + 4B + 4B + 4B = 20B
-};
 
-struct TpMensagem //578B
+struct TpMensagem //638B
 {
 	TpMensagem *MensAnt; //4B
 	TpMensagem *MensProx; //4B
-	TpData DataHora;
-	char LoginMens[50], Assunto[50], Mensagem[500]; //50B + 500B + 20B = 570B
+	char Assunto[50], Mensagem[500], DataHora[30], LoginMens[50]; //50B + 500B + 30B + 50B = 630B
 };
 
 struct TpUsuario //93B
@@ -74,21 +69,25 @@ TpServidor* BuscaServidor(TpDescritor D, char Dominio[30], char Login[50])
 TpUsuario* BuscaUsuario(TpDescritor D, char Login[50])
 {
 	TpServidor *Serv=BuscaServidor(D, "", Login);
-	TpUsuario *Usu=Serv->ServUsu;
+	TpUsuario *Usu;
 	char LoginBackup[50];
-	if (strchr(Login, '@'))
+	if (Serv!=NULL)
 	{
-		strcpy(LoginBackup, Login);
-		while (Usu!=NULL && strcmp(Usu->Login, Login)!=0)
-			Usu = Usu->UsuProx;
-		strcpy(Login, LoginBackup);
-		if (Usu!=NULL)
-			return Usu;
+		Usu = Serv->ServUsu;
+		if (strchr(Login, '@'))
+		{
+			strcpy(LoginBackup, Login);
+			while (Usu!=NULL && strcmp(Usu->Login, Login)!=0)
+				Usu = Usu->UsuProx;
+			strcpy(Login, LoginBackup);
+			if (Usu!=NULL)
+				return Usu;
+			else
+				return NULL;
+		}
 		else
 			return NULL;
 	}
-	else
-		return NULL;
 }
 
 char VerificaLogin(TpDescritor D, TpUsuario U) 
@@ -131,6 +130,45 @@ char SeparaDominio(TpDescritor D, char Login[50])
 	}
 	else
 		return 'L';
+}
+
+void RecebeDataHoraAtual(char DataHora[30])
+{
+	time_t Tempo = time(0);
+	tm* DataHoraAtual = localtime(&Tempo);
+	char Aux[10], DataHoraMens[30];
+	int Ano=1900+DataHoraAtual->tm_year;
+	strcpy(DataHoraMens, "\0");
+
+	//Dia, Mês e Ano
+	itoa(DataHoraAtual->tm_mday, Aux, 10);
+	if (DataHoraAtual->tm_mday<10)
+		strcat(DataHoraMens, "0");
+	strcat(DataHoraMens, Aux);
+	strcat(DataHoraMens, "/");
+	itoa(DataHoraAtual->tm_mon, Aux, 10);
+	if (DataHoraAtual->tm_mon<10)
+		strcat(DataHoraMens, "0");
+	strcat(DataHoraMens, Aux);
+	strcat(DataHoraMens, "/");
+	itoa(Ano, Aux, 10);
+	strcat(DataHoraMens, Aux);
+	
+	//Separador da Data e Hora
+	strcat(DataHoraMens, " ");
+
+	//Hora e Minuto
+	itoa(DataHoraAtual->tm_hour, Aux, 10);
+	if (DataHoraAtual->tm_hour<10)
+		strcat(DataHoraMens, "0");
+	strcat(DataHoraMens, Aux);
+	strcat(DataHoraMens, ":");
+	itoa(DataHoraAtual->tm_min, Aux, 10);
+	if (DataHoraAtual->tm_min<10)
+		strcat(DataHoraMens, "0");
+	strcat(DataHoraMens, Aux);
+
+	strcpy(DataHora, DataHoraMens);
 }
 
 void LimparMensagens(TpUsuario *Usu)
@@ -246,7 +284,7 @@ void ListarServidores(TpDescritor D)
 		printf("\n\nLista de Servidores Vazia!\n");
 	else
 	{
-		printf("\n\n  ** LISTA DE TODOS OS SERVIDORES **\n");
+		printf("\n\n\t** LISTA DE TODOS OS SERVIDORES **\n");
 		printf("-----------------------------------------------\n");
 		printf("| Dominio                 | Local             |\n");
 		printf("-----------------------------------------------\n");
@@ -289,7 +327,7 @@ void ConsultarServidores(TpDescritor D)
 	}
 }
 
-void AlterarServidor(TpServidor *Serv, TpServidor RegServ)
+void AlterarServidores(TpServidor *Serv, TpServidor RegServ)
 {
 	TpUsuario *Usu=Serv->ServUsu;
 	strcpy(Serv->Dominio, RegServ.Dominio);
@@ -297,7 +335,7 @@ void AlterarServidor(TpServidor *Serv, TpServidor RegServ)
 	LinkarUsuarios(Usu, RegServ.Dominio);
 } 
 
-void ExcluirServidor(TpDescritor &D, char Dominio[30])
+void ExcluirServidores(TpDescritor &D, char Dominio[30])
 {
 	TpServidor *Aux;
 	if (strcmp(D.Inicio->Dominio, Dominio)==0)
@@ -328,7 +366,7 @@ void ExcluirServidor(TpDescritor &D, char Dominio[30])
 	}
 }
 
-void CadastrarUsuarioOrd(TpDescritor &D, TpUsuario Usu)
+void CadastrarUsuarioOrd(TpDescritor D, TpUsuario Usu)
 {
 	TpUsuario *Novo, *Aux;
 	TpServidor *Serv=BuscaServidor(D, "", Usu.Login);
@@ -404,7 +442,7 @@ void ListarUsuarios(TpDescritor D)
 		}
 		else
 		{
-			printf("\nQual Servidor?\n");
+			printf("\nQual Servidor?");
 			gets(Dominio);
 			Serv = BuscaServidor(D, Dominio, "");
 			if (Serv!=NULL)
@@ -504,26 +542,60 @@ void ExcluirUsuario(TpDescritor D, char Login[50])
 	}
 }
 
-//Não terminado
-/* TpMensagem* CadastrarMensagem(TpMensagem *Mens,TpMensagem &Reg)
+void CadastrarMensagens(TpDescritor D, TpMensagem Mens)
 {
-	TpMensagem *Novo,*Aux;
+	TpUsuario *Usu=BuscaUsuario(D, Mens.LoginMens);
+	TpMensagem *Novo, *Aux;
 	Novo = new TpMensagem;
-	strcpy(Novo->Assunto,Reg.Assunto);
-	strcpy(Novo->Mensagem,Reg.Mensagem);
-	strcpy(Novo->LoginMens,Reg.Login);
-	Novo->DataHora = MostraHoraAtual;
+	strcpy(Novo->Assunto, Mens.Assunto);
+	strcpy(Novo->Mensagem, Mens.Mensagem);
+	strcpy(Novo->LoginMens, Mens.LoginMens);
+	strcpy(Novo->DataHora, Mens.DataHora);
 	Novo->MensProx = NULL;
-	Aux = Mens;
-	while(Aux->MensProx!=NULL)
-		Aux = Aux->MensProx;
-	Aux -> MensProx = Novo;
-	Novo -> MensAnt = Aux;
-	return Mens;
+	Novo->MensAnt = NULL;
+	if (Usu->UsuMens==NULL)
+		Usu->UsuMens = Novo;
+	else
+	{
+		Aux = Usu->UsuMens;
+		while (Aux->MensProx!=NULL)
+			Aux = Aux->MensProx;
+		Aux->MensProx = Novo;
+		Novo->MensAnt = Aux;
+	}
 }
 
 //Não terminado
-void ConsultarMensagem(TpMensagem *Mens)
+void ListarMensagens(TpDescritor D, char Login[50])
+{
+	TpUsuario *Usu=BuscaUsuario(D, Login);
+	TpMensagem *Mens;
+	if (D.Inicio==NULL)
+		printf("\n\nLista de Servidores Vazia!\n");
+	else
+	{
+		Mens = Usu->UsuMens;
+		printf("\n\n\t** LISTA DE TODAS AS MENSAGENS DO USUARIO **\n");
+		printf("---------------------------------------------------------------\n");
+		printf("| Usuario: %-50s |\n");
+		while (Mens!=NULL)
+		{
+			printf("|                                                             |\n");
+			printf("---------------------------------------------------------------\n");
+			printf("| Assunto: %-50s |\n");
+			printf("|                                                             |\n");
+			printf("| Mensagem: %-50s |\n");
+			printf("|                                                             |\n");
+			printf("| %-30s                     |\n", Mens->DataHora);
+			printf("---------------------------------------------------------------\n");
+			Mens = Mens->MensProx;
+		}
+	}
+	getch();
+}
+
+//Não terminado
+/* void ConsultarMensagem(TpMensagem *Mens)
 {
 	TpMensagem *Aux;
 	char Assunto[50];
@@ -600,17 +672,3 @@ TpMensagem* ExcluirMensagem(char Assunto[50],TpMensagem *Mens)
 	}
 	return Mens;
 }
-
-//Não terminado
-/* TpData MostraHoraAtual()
-{
-	time_t agr = time(0);
-	tm* lt = localtime(&agr);
-	TpData data;
-	data.ano = 1900+lt->tm_year;
-	data.mes = lt->tm_mon;
-	data.dia = lt->tm_mday;
-	data.hora = lt->tm_hour;
-	data.minuto = lt->tm_min;
-	return data;
-} */
