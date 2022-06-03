@@ -8,18 +8,17 @@
 
 
 //Funções de Chamada do TAD
-//Não terminado (Mensagens não incluídas)
 void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, TpServidor *Serv, TpUsuario *Usu, TpMensagem *Mens)
 {
 	TpServidor RegServ;
 	TpUsuario RegUsu, *UsuAux;
-	//TpMensagem MAtual;
+	TpMensagem RegMens, *MensAux;
 	ArqServ = fopen("Servidores.dat", "rb");
 	ArqUsu = fopen("Usuarios.dat", "rb");
-	//ArqMens = fopen("Mensagens", "rb");
+	ArqMens = fopen("Mensagens.dat", "rb");
 	rewind(ArqServ);
 	rewind(ArqUsu);
-	//rewind(ArqMens);
+	rewind(ArqMens);
 	fread(&RegServ, sizeof(TpServidor), 1, ArqServ);
 	while (!feof(ArqServ))
 	{
@@ -57,25 +56,42 @@ void RecuperaListas(TpDescritor &D, FILE *ArqServ, FILE *ArqUsu, FILE *ArqMens, 
 				UsuAux->UsuProx = Usu;
 				Usu->UsuAnt = UsuAux;
 			}		
-			UsuAux = Usu;	
+			UsuAux = Usu;
+			fread(&RegMens, sizeof(TpMensagem), 1, ArqMens);
+			while (!feof(ArqMens) && BuscaUsuario(D, RegMens.LoginDest)!=NULL)
+			{
+				Mens = new TpMensagem;
+				strcpy(Mens->Assunto, RegMens.Assunto);
+				strcpy(Mens->Mensagem, RegMens.Mensagem);
+				strcpy(Mens->DataHora, RegMens.DataHora);
+				strcpy(Mens->LoginDest, RegMens.LoginDest);
+				strcpy(Mens->LoginReme, RegMens.LoginReme);
+				Mens->MensProx = NULL;
+				Mens->MensAnt = NULL;
+				if (UsuAux->UsuMens==NULL)
+					UsuAux->UsuMens = Mens;
+				else
+				{
+					MensAux->MensProx = Mens;
+					Mens->MensAnt = MensAux;
+				}
+				MensAux = Mens;
+				fread(&RegMens, sizeof(TpMensagem), 1, ArqMens);
+			}
 			fread(&RegUsu, sizeof(TpUsuario), 1, ArqUsu);
 		}
 		fread(&RegServ, sizeof(TpServidor), 1, ArqServ);
 	}
 }
 
-//Não terminado (Mensagens não incluídas)
 void SalvarListas(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *Mens)
 {
 	FILE *ArqServ = fopen("Servidores.dat", "wb");
 	FILE *ArqUsu = fopen("Usuarios.dat", "wb");
-	//FILE *ArqMens = fopen("Mensagens.dat", "wb");
+	FILE *ArqMens = fopen("Mensagens.dat", "wb");
 	TpServidor RegServ;
 	TpUsuario RegUsu;
-	//TpMensagem MAtual;
-	fseek(ArqServ, 0, 2);
-	fseek(ArqUsu, 0, 2);
-	//fseek(ArqMens, 0, 2);
+	TpMensagem RegMens;
 	Serv = D.Inicio;
 	while (Serv!=NULL)
 	{
@@ -95,6 +111,21 @@ void SalvarListas(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *
 			RegUsu.UsuProx = NULL;
 			RegUsu.UsuMens = NULL;
 			fwrite(&RegUsu, sizeof(TpUsuario), 1, ArqUsu);
+			Mens = Usu->UsuMens;
+			while (Mens!=NULL)
+			{
+				strcpy(RegMens.Assunto, Mens->Assunto);
+				strcpy(RegMens.Mensagem, Mens->Mensagem);
+				strcpy(RegMens.DataHora, Mens->DataHora);
+				strcpy(RegMens.LoginDest, Mens->LoginDest);
+				strcpy(RegMens.LoginReme, Mens->LoginReme);
+				RegMens.MensProx = NULL;
+				RegMens.MensAnt = NULL;
+				fwrite(&RegMens, sizeof(TpMensagem), 1, ArqMens);
+				Mens = Mens->MensProx;
+			}
+			strcpy(RegMens.LoginDest, "");
+			fwrite(&RegMens, sizeof(TpMensagem), 1, ArqMens);
 			Usu = Usu->UsuProx;
 		}
 		strcpy(RegUsu.Login, "");
@@ -103,20 +134,18 @@ void SalvarListas(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *
 	}
 	fclose(ArqServ);
 	fclose(ArqUsu);
-	//fclose(ArqMens);
+	fclose(ArqMens);
 }
 
 void AbrindoPrograma(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *Mens)
 {
-	FILE *ArqServ = fopen("Servidores.dat", "rb");
-	FILE *ArqUsu = fopen("Usuarios.dat", "rb");
-	FILE *ArqMens = fopen("Mensagens.dat", "rb");
+	FILE *ArqServ = fopen("Servidores.dat", "ab");
+	FILE *ArqUsu = fopen("Usuarios.dat", "ab");
+	FILE *ArqMens = fopen("Mensagens.dat", "ab");
 	TpServidor RegServ;
 	TpUsuario RegUsu;
 	if (ArqServ==NULL)
 	{
-		ArqServ = fopen("Servidores.dat", "ab");
-		ArqUsu = fopen("Usuarios.dat", "ab");
 		strcpy(RegUsu.Login, "radmin@admin");
 		strcpy(RegUsu.Senha, "123");
 		RegUsu.Tipo = 'A';
@@ -224,6 +253,7 @@ void ExclusaoServidores(TpDescritor &D)
 	char Dominio[30];
 	printf("\n\n** EXCLUSAO DE SERVIDORES **\n\n");
 	printf("Qual Servidor deseja excluir?\n");
+	fflush(stdin);
 	gets(Dominio);
 	while (strcmp(Dominio, "\0")!=0)
 	{
@@ -242,6 +272,7 @@ void ExclusaoServidores(TpDescritor &D)
 			printf("\nO servidor admin nao pode ser excluido!\n");
 		getch();
 		printf("\nQual Servidor deseja excluir?\n");
+		fflush(stdin);
 		gets(Dominio);
 	}
 }
@@ -296,6 +327,7 @@ void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 	if (RegUsuAux.Tipo=='A')
 	{
 		printf("Qual conta de Usuario deseja alterar?\n");
+		fflush(stdin);
 		gets(RegUsu.Login);
 		while (strcmp(RegUsu.Login, "\0")!=0)
 		{
@@ -307,6 +339,7 @@ void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 				BackRegUsu.Tipo = Usu->Tipo;
 				printf("\nLogin: %s\tSenha: %s\tTipo: %c\nEncontrado na lista de Usuarios\n\n", Usu->Login, Usu->Senha, Usu->Tipo);
 				printf("Novo Login (sem o Dominio): ");
+				fflush(stdin);
 				gets(RegUsu.Login);
 				strcat(RegUsu.Login, "@");
 				Serv = BuscaServidor(D, "", RegUsuAux.Login);
@@ -314,6 +347,7 @@ void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 				if (!BuscaUsuario(D, RegUsu.Login))
 				{
 					printf("Nova Senha: ");
+					fflush(stdin);
 					gets(RegUsu.Senha);
 					if (strcmp(Serv->Dominio, "admin")!=0)
 					{
@@ -334,6 +368,7 @@ void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 			if (RegUsuAux.Tipo!='C')
 			{
 				printf("\nQual conta de Usuario deseja alterar?\n");
+				fflush(stdin);
 				gets(RegUsu.Login);
 			}
 		}
@@ -343,6 +378,7 @@ void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 		BackRegUsu = RegUsuAux;
 		printf("\n\nLogin: %s\tSenha: %s\tTipo: %c\nEncontrado na lista de Usuarios\n\n", RegUsuAux.Login, RegUsuAux.Senha, RegUsuAux.Tipo);
 		printf("Novo Login (sem o Dominio): ");
+		fflush(stdin);
 		gets(RegUsu.Login);
 		strcat(RegUsu.Login, "@");
 		Serv = BuscaServidor(D, "", RegUsuAux.Login);
@@ -350,6 +386,7 @@ void AlteracaoUsuarios(TpDescritor D, TpUsuario &RegUsuAux)
 		if (!BuscaUsuario(D, RegUsu.Login))
 		{
 			printf("Nova Senha: ");
+			fflush(stdin);
 			gets(RegUsu.Senha);
 			RegUsu.Tipo = Usu->Tipo;
 			AlterarUsuarios(Usu, RegUsu);
@@ -372,6 +409,7 @@ void ExclusaoUsuarios(TpDescritor D, TpUsuario &RegUsu)
 	if (RegUsu.Tipo=='A')
 	{
 		printf("Qual Usuario deseja excluir?\n");
+		fflush(stdin);
 		gets(Login);
 		Serv = BuscaServidor(D, "", RegUsu.Login);
 		if (strcmp(RegUsu.Login, Login)==0 && strcmp(Serv->Dominio, "admin")!=0)
@@ -385,7 +423,10 @@ void ExclusaoUsuarios(TpDescritor D, TpUsuario &RegUsu)
 				strcpy(RegUsu.Login, "");
 			}
 			else
+			{
 				printf("\nOpercao Cancelada!\n");
+				getch();
+			}
 		}
 		else if (strcmp(RegUsu.Login, Login)!=0)
 			while (strcmp(Login, "\0")!=0)
@@ -400,11 +441,14 @@ void ExclusaoUsuarios(TpDescritor D, TpUsuario &RegUsu)
 					printf("\nEste Usuario nao esta cadastrado!\n");
 				getch();
 				printf("\nQual Usuario deseja excluir?\n");
+				fflush(stdin);
 				gets(Login);
 			}
 		else
+		{
 			printf("\nUsuario Padrao Admin nao pode ser excluido!\n");
-		getch();
+			getch();
+		}
 	}
 	else
 	{
@@ -422,16 +466,16 @@ void ExclusaoUsuarios(TpDescritor D, TpUsuario &RegUsu)
 	}
 }
 
-void EnviarMensagens(TpDescritor D)
+void EnviarMensagens(TpDescritor D, char LoginReme[50])
 {
 	TpMensagem Mens;
 	printf("\n\n** ENVIO DE MENSAGENS **\n\n");
 	printf("Para qual Usuario deseja enviar?\n");
 	fflush(stdin);
-	gets(Mens.LoginMens);
-	while (strcmp(Mens.LoginMens, "\0")!=0)
+	gets(Mens.LoginDest);
+	while (strcmp(Mens.LoginDest, "\0")!=0)
 	{
-		if (BuscaUsuario(D, Mens.LoginMens))
+		if (BuscaUsuario(D, Mens.LoginDest))
 		{
 			printf("\nAssunto: ");
 			fflush(stdin);
@@ -439,20 +483,46 @@ void EnviarMensagens(TpDescritor D)
 			printf("Mensagem: ");
 			fflush(stdin);
 			gets(Mens.Mensagem);
+			strcpy(Mens.LoginReme, LoginReme);
 			RecebeDataHoraAtual(Mens.DataHora);
 			CadastrarMensagens(D, Mens);
-			printf("\nMensagem enviada para %s com sucesso!\n", Mens.LoginMens);
+			printf("\nMensagem enviada para %s com sucesso!\n", Mens.LoginDest);
 		}
 		else
 			printf("\nUsuario nao existe!\n");
 		getch();
 		printf("\nPara qual Usuario deseja enviar?\n");
 		fflush(stdin);
-		gets(Mens.LoginMens);
+		gets(Mens.LoginDest);
 	}
 }
 
-//Não terminado
+void ExclusaoMensagens(TpDescritor D, char Login[50])
+{
+	TpMensagem *Mens;
+	char Assunto[50];
+	printf("\n\n** EXCLUSAO DE SERVIDORES POR ASSUNTO **\n\n");
+	printf("Qual Mensagem deseja excluir?\n");
+	fflush(stdin);
+	gets(Assunto);
+	while (strcmp(Assunto, "\0")!=0)
+	{
+		Mens = BuscaMensagem(D, Login, Assunto);
+		if (Mens!=NULL)
+		{
+			Mens = ExcluirMensagem(D, Login, Assunto);
+			printf("\nAssunto: %s\nMensagem: %s\n", Mens->Assunto, Mens->Mensagem);
+			printf("\nMensagem excluida!\n");
+		}
+		else
+			printf("\nEsta Mensagem nao existe!\n");
+		getch();
+		printf("\nQual Mensagem deseja excluir?\n");
+		fflush(stdin);
+		gets(Assunto);
+	}
+}
+
 char MenuUsuario(char Login[50])
 {
 	system("cls");
@@ -460,20 +530,20 @@ char MenuUsuario(char Login[50])
 	printf("Usuario: %s\t\tComum\n\n", Login);
 	printf("[A] Enviar Mensagens\n");
 	printf("[B] Listar Mensagens recebidas\n");
-	printf("[C] Buscar Mensagens recebidas\n");
-	printf("[D] Deletar Mensagens recebidas\n");
+	printf("[C] Listar Mensagens recebidas de um determinado Dia\n");
+	printf("[D] Buscar Mensagens recebidas\n");
+	printf("[E] Deletar Mensagens recebidas\n");
 
-	printf("\n[E] Listar Usuarios\n");
-	printf("[F] Buscar Usuarios\n");
-	printf("[G] Alterar Conta\n");
-	printf("[H] Deletar Conta\n");
+	printf("\n[F] Listar Usuarios\n");
+	printf("[G] Buscar Usuarios\n");
+	printf("[H] Alterar Conta\n");
+	printf("[I] Deletar Conta\n");
 
 	printf("\n[ESC] Sair do Programa\n");
 	printf("\nPressione a opcao desejada: ");
 	return toupper(getche());
 }
 
-//Não terminado
 char MenuAdmin(char Login[50])
 {
 	system("cls");
@@ -493,15 +563,15 @@ char MenuAdmin(char Login[50])
 
 	printf("\n[K] Enviar Mensagens\n");
 	printf("[L] Listar Mensagens recebidas\n");
-	printf("[M] Buscar Mensagens recebidas\n");
-	printf("[N] Deletar Mensagens recebidas\n");
+	printf("[M] Listar Mensagens recebidas de um determinado Dia\n");
+	printf("[N] Buscar Mensagens recebidas\n");
+	printf("[O] Deletar Mensagens recebidas\n");
 
 	printf("\n[ESC] Sair do Programa\n");
 	printf("\nPressione a opcao desejada: ");
 	return toupper(getche());
 }
 
-//Não terminado
 void MenuLogin(TpDescritor &D)
 {
 	TpUsuario RegUsu;
@@ -509,10 +579,12 @@ void MenuLogin(TpDescritor &D)
 	system("cls");
 	printf("\t\t** LOGIN DO USUARIO **\n\n");
 	printf("Login: ");
+	fflush(stdin);
 	gets(RegUsu.Login);
 	while (strcmp(RegUsu.Login, "\0")!=0)
 	{
 		printf("Senha: ");
+		fflush(stdin);
 		gets(RegUsu.Senha);
 		RegUsu.Tipo = VerificaLogin(D, RegUsu);
 		if (RegUsu.Tipo=='C')
@@ -522,7 +594,7 @@ void MenuLogin(TpDescritor &D)
 				switch(Opcao)
 				{
 					case 'A':
-							EnviarMensagens(D);
+							EnviarMensagens(D, RegUsu.Login);
 							break;
 
 					case 'B':
@@ -530,24 +602,30 @@ void MenuLogin(TpDescritor &D)
 							break;
 
 					case 'C':
+							ListarMensagensDia(D, RegUsu.Login);
 							break;
 
 					case 'D':
+							ConsultarMensagem(D, RegUsu.Login);
 							break;
 
 					case 'E':
-							ListarUsuarios(D);
+							ExclusaoMensagens(D, RegUsu.Login);
 							break;
 
 					case 'F':
-							ConsultarUsuarios(D);
+							ListarUsuarios(D);
 							break;
 
 					case 'G':
-							AlteracaoUsuarios(D, RegUsu);
+							ConsultarUsuarios(D);
 							break;
 
 					case 'H':
+							AlteracaoUsuarios(D, RegUsu);
+							break;
+
+					case 'I':
 							ExclusaoUsuarios(D, RegUsu);
 							if (strcmp(RegUsu.Login, "")==0)
 								Opcao = 27;
@@ -609,7 +687,7 @@ void MenuLogin(TpDescritor &D)
 							break;	
 
 					case 'K':
-							EnviarMensagens(D);
+							EnviarMensagens(D, RegUsu.Login);
 							break;	
 
 					case 'L':
@@ -617,9 +695,15 @@ void MenuLogin(TpDescritor &D)
 							break;	
 
 					case 'M':
+							ListarMensagensDia(D, RegUsu.Login);
 							break;	
 
 					case 'N':
+							ConsultarMensagem(D, RegUsu.Login);
+							break;	
+
+					case 'O':
+							ExclusaoMensagens(D, RegUsu.Login);
 							break;	
 				}
 			}while(Opcao!=27);
@@ -636,6 +720,7 @@ void MenuLogin(TpDescritor &D)
 		system("cls");
 		printf("\t\t** LOGIN DO USUARIO **\n\n");
 		printf("Login: ");
+		fflush(stdin);
 		gets(RegUsu.Login);
 	}
 }

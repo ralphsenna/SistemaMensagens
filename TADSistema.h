@@ -1,10 +1,10 @@
 //Declaração de Structs
 
-struct TpMensagem //638B
+struct TpMensagem //688B
 {
 	TpMensagem *MensAnt; //4B
 	TpMensagem *MensProx; //4B
-	char Assunto[50], Mensagem[500], DataHora[30], LoginMens[50]; //50B + 500B + 30B + 50B = 630B
+	char Assunto[50], Mensagem[500], DataHora[30], LoginDest[50], LoginReme[50]; //50B + 500B + 30B + 50B = 50B = 680B
 };
 
 struct TpUsuario //93B
@@ -70,21 +70,34 @@ TpUsuario* BuscaUsuario(TpDescritor D, char Login[50])
 {
 	TpServidor *Serv=BuscaServidor(D, "", Login);
 	TpUsuario *Usu;
-	char LoginBackup[50];
 	if (Serv!=NULL)
 	{
 		Usu = Serv->ServUsu;
 		if (strchr(Login, '@'))
 		{
-			strcpy(LoginBackup, Login);
 			while (Usu!=NULL && strcmp(Usu->Login, Login)!=0)
 				Usu = Usu->UsuProx;
-			strcpy(Login, LoginBackup);
 			if (Usu!=NULL)
 				return Usu;
 			else
 				return NULL;
 		}
+		else
+			return NULL;
+	}
+}
+
+TpMensagem* BuscaMensagem(TpDescritor D, char Login[50], char Assunto[50])
+{
+	TpUsuario *Usu=BuscaUsuario(D, Login);
+	TpMensagem *Mens;
+	if (Mens!=NULL)
+	{
+		Mens = Usu->UsuMens;
+		while (Mens!=NULL && strcmp(Mens->Assunto, Assunto)!=0)
+			Mens = Mens->MensProx;
+		if (Mens!=NULL)
+			return Mens;
 		else
 			return NULL;
 	}
@@ -137,7 +150,6 @@ void RecebeDataHoraAtual(char DataHora[30])
 	time_t Tempo = time(0);
 	tm* DataHoraAtual = localtime(&Tempo);
 	char Aux[10], DataHoraMens[30];
-	int Ano=1900+DataHoraAtual->tm_year;
 	strcpy(DataHoraMens, "\0");
 
 	//Dia, Mês e Ano
@@ -146,12 +158,12 @@ void RecebeDataHoraAtual(char DataHora[30])
 		strcat(DataHoraMens, "0");
 	strcat(DataHoraMens, Aux);
 	strcat(DataHoraMens, "/");
-	itoa(DataHoraAtual->tm_mon, Aux, 10);
+	itoa(DataHoraAtual->tm_mon+1, Aux, 10);
 	if (DataHoraAtual->tm_mon<10)
 		strcat(DataHoraMens, "0");
 	strcat(DataHoraMens, Aux);
 	strcat(DataHoraMens, "/");
-	itoa(Ano, Aux, 10);
+	itoa(DataHoraAtual->tm_year+1900, Aux, 10);
 	strcat(DataHoraMens, Aux);
 	
 	//Separador da Data e Hora
@@ -213,7 +225,7 @@ void LinkarMensagens(TpMensagem *Mens, char NovoLogin[50])
 	if (Mens!=NULL)
 		while (Mens!=NULL)
 		{
-			strcpy(Mens->LoginMens, NovoLogin);
+			strcpy(Mens->LoginDest, NovoLogin);
 			Mens = Mens->MensProx;
 		}
 }
@@ -344,7 +356,6 @@ void ExcluirServidores(TpDescritor &D, char Dominio[30])
 		LimparUsuarios(Aux);
 		D.Inicio = D.Inicio->ServProx;
 		D.Inicio->ServAnt = NULL;
-		delete(Aux);
 	}
 	else if (strcmp(D.Fim->Dominio, Dominio)==0)
 	{
@@ -352,7 +363,6 @@ void ExcluirServidores(TpDescritor &D, char Dominio[30])
 		LimparUsuarios(Aux);
 		D.Fim = D.Fim->ServAnt;
 		D.Fim->ServProx = NULL;
-		delete(Aux);
 	}
 	else
 	{
@@ -362,8 +372,8 @@ void ExcluirServidores(TpDescritor &D, char Dominio[30])
 		LimparUsuarios(Aux);
 		Aux->ServProx->ServAnt = Aux->ServAnt;
 		Aux->ServAnt->ServProx = Aux->ServProx;
-		delete(Aux);
 	}
+	delete(Aux);
 }
 
 void CadastrarUsuarioOrd(TpDescritor D, TpUsuario Usu)
@@ -488,6 +498,7 @@ void ConsultarUsuarios(TpDescritor D)
 	{
 		printf("\n\n** CONSULTA DE USUARIOS **\n\n");
 		printf("Qual Usuario deseja pesquisar?\n");
+		fflush(stdin);
 		gets(Login);
 		while (strcmp(Login, "\0")!=0)
 		{
@@ -498,6 +509,7 @@ void ConsultarUsuarios(TpDescritor D)
 				printf("\nEste Usuario nao esta cadastrado!\n");
 			getch();
 			printf("\nQual Usuario deseja pesquisar?\n");
+			fflush(stdin);
 			gets(Login);
 		}
 	}
@@ -521,13 +533,12 @@ void ExcluirUsuario(TpDescritor D, char Login[50])
 		LimparMensagens(Usu);
 		Serv->ServUsu = Usu->UsuProx;
 		Usu->UsuProx->UsuAnt = NULL;
-		delete(Usu);
 	}
 	else
 	{
-		while (Usu!=NULL && strcmp(Usu->Login, Login)!=0)
+		while (Usu->UsuProx!=NULL && strcmp(Usu->Login, Login)!=0)
 			Usu = Usu->UsuProx;
-		if(Usu->UsuProx==NULL)
+		if (Usu->UsuProx==NULL)
 		{
 			LimparMensagens(Usu);
 			Usu->UsuAnt->UsuProx = NULL;
@@ -538,19 +549,20 @@ void ExcluirUsuario(TpDescritor D, char Login[50])
 			Usu->UsuProx->UsuAnt = Usu->UsuAnt;
 			Usu->UsuAnt->UsuProx = Usu->UsuProx;
 		}
-		delete(Usu);
 	}
+	delete(Usu);
 }
 
 void CadastrarMensagens(TpDescritor D, TpMensagem Mens)
 {
-	TpUsuario *Usu=BuscaUsuario(D, Mens.LoginMens);
+	TpUsuario *Usu=BuscaUsuario(D, Mens.LoginDest);
 	TpMensagem *Novo, *Aux;
 	Novo = new TpMensagem;
 	strcpy(Novo->Assunto, Mens.Assunto);
 	strcpy(Novo->Mensagem, Mens.Mensagem);
-	strcpy(Novo->LoginMens, Mens.LoginMens);
 	strcpy(Novo->DataHora, Mens.DataHora);
+	strcpy(Novo->LoginDest, Mens.LoginDest);
+	strcpy(Novo->LoginReme, Mens.LoginReme);
 	Novo->MensProx = NULL;
 	Novo->MensAnt = NULL;
 	if (Usu->UsuMens==NULL)
@@ -565,7 +577,6 @@ void CadastrarMensagens(TpDescritor D, TpMensagem Mens)
 	}
 }
 
-//Não terminado
 void ListarMensagens(TpDescritor D, char Login[50])
 {
 	TpUsuario *Usu=BuscaUsuario(D, Login);
@@ -576,99 +587,179 @@ void ListarMensagens(TpDescritor D, char Login[50])
 	{
 		Mens = Usu->UsuMens;
 		printf("\n\n\t** LISTA DE TODAS AS MENSAGENS DO USUARIO **\n");
-		printf("---------------------------------------------------------------\n");
-		printf("| Usuario: %-50s |\n");
+		printf("--------------------------------------------------------------------\n");
 		while (Mens!=NULL)
 		{
-			printf("|                                                             |\n");
-			printf("---------------------------------------------------------------\n");
-			printf("| Assunto: %-50s |\n");
-			printf("|                                                             |\n");
-			printf("| Mensagem: %-50s |\n");
-			printf("|                                                             |\n");
-			printf("| %-30s                     |\n", Mens->DataHora);
-			printf("---------------------------------------------------------------\n");
+			printf("| Remetente: %-53s |\n", Mens->LoginReme);
+			printf("|                                                                  |\n");
+			printf("| Destinatario: %-50s |\n", Mens->LoginDest);
+			printf("--------------------------------------------------------------------\n");
+			printf("| Assunto: %-55s |\n", Mens->Assunto);
+			printf("|                                                                  |\n");
+			printf("| Mensagem: %-54s |\n", Mens->Mensagem);
+			printf("|                                                                  |\n");
+			printf("|                                                                  |\n");
+			printf("| %-64s |\n", Mens->DataHora);
+			printf("--------------------------------------------------------------------\n");
+			printf("|                                                                  |\n");
+			printf("--------------------------------------------------------------------\n");
 			Mens = Mens->MensProx;
 		}
 	}
 	getch();
 }
 
-//Não terminado
-/* void ConsultarMensagem(TpMensagem *Mens)
+void ListarMensagensDia(TpDescritor D, char Login[50])
 {
-	TpMensagem *Aux;
-	char Assunto[50];
-	if(Mens==NULL)
-		printf("\n\n Nao ha mensagens!\n");
+	TpUsuario *Usu=BuscaUsuario(D, Login);
+	TpMensagem *Mens;
+	bool Achou=false;
+	char DataPesquisa[30], DataAux[30];
+	int i;
+	if (D.Inicio==NULL)
+		printf("\n\nLista de Servidores Vazia!\n");
 	else
 	{
-		printf("\n\nQual o assunto da mensagem que procura?\n");
-		gets(Assunto);
-		while(strcmp(Assunto,"\0")!=0)
+		printf("\n\nData a pesquisar (DD/MM/AAAA): ");
+		fflush(stdin);
+		gets(DataPesquisa);
+		Mens = Usu->UsuMens;
+		while (Mens!=NULL)
 		{
-			Aux = Mens;
-			while(Aux->MensProx!=NULL && strcpy(Aux->Assunto,Assunto)!=0)
-				Aux = Aux->MensProx;
-			if(strcpy(Aux->Assunto,Assunto)==0)
-			{
-				printf("\nMandado por: %s\nAssunto: %s\n\n\t%s",Aux->Login,Aux->Assunto,Aux->Mensagem);
-				if(Aux->DataHora.dia<10)
-					printf("Data: 0%d/",Aux->DataHora.dia);
-				else
-					printf("Data: %d/",Aux->DataHora.dia);
-				if(Aux->DataHora.mes<10)
-					printf("0%d/",Aux->DataHora.mes);
-				else
-					printf("%d/",Aux->DataHora.mes);
-				printf("%d\n",Aux->DataHora.ano);
-				printf("Hora: %d:",Aux->DataHora.hora);
-				if(Aux->DataHora.minuto<10)
-					printf("0%d",Aux->DataHora.minuto);
-				else
-					printf("%d\n",Aux->DataHora.minuto);
-			}
-			else
-				printf("Assunto nao encontrado:");
-			getch();
-			printf("\n\nQual o assunto da mensagem que procura?\n");
-			gets(Assunto);
+			for (i=0; Mens->DataHora[i]!=' '; i++)
+					DataAux[i] = Mens->DataHora[i];
+			DataAux[i] = '\0';
+			if (strcmp(DataAux, DataPesquisa)==0)
+				Achou = true;
+			Mens = Mens->MensProx;
 		}
-	}
-} */
-
-//Não terminado
-TpMensagem* ExcluirMensagem(char Assunto[50],TpMensagem *Mens)
-{
-	TpMensagem *Aux;
-	Aux = Mens;
-	if(strcmp(Assunto,Mens->Assunto)==0)
-	{
-		Mens = Mens->MensProx;
-		delete(Aux);
-	}
-	else
-	{
-		while(Aux->MensProx!=NULL && strcmp(Aux->Assunto,Assunto)!=0)
-			Aux = Aux->MensProx;
-		if(strcmp(Aux->Assunto,Assunto)==0)
+		if (Achou==true)
 		{
-			if(Aux->MensProx==NULL)
+			Mens = Usu->UsuMens;
+			printf("\n\t** LISTA DE TODAS AS MENSAGENS DO DIA %s **\n", DataPesquisa);
+			printf("--------------------------------------------------------------------\n");
+			while (Mens!=NULL)
 			{
-				Aux->MensAnt->MensProx = NULL;
-				delete(Aux);
-			}
-			else
-			{
-				Aux->MensProx->MensAnt = Aux->MensAnt;
-				Aux->MensAnt->MensProx = Aux->MensProx;
-				delete(Aux);
+				if (strcmp(DataAux, DataPesquisa)==0)
+				{
+					for (i=0; Mens->DataHora[i]!=' '; i++)
+						DataAux[i] = Mens->DataHora[i];
+					DataAux[i] = '\0';
+					printf("| Remetente: %-53s |\n", Mens->LoginReme);
+					printf("|                                                                  |\n");
+					printf("| Destinatario: %-50s |\n", Mens->LoginDest);
+					printf("--------------------------------------------------------------------\n");
+					printf("| Assunto: %-55s |\n", Mens->Assunto);
+					printf("|                                                                  |\n");
+					printf("| Mensagem: %-54s |\n", Mens->Mensagem);
+					printf("|                                                                  |\n");
+					printf("|                                                                  |\n");
+					printf("| %-64s |\n", Mens->DataHora);
+					printf("--------------------------------------------------------------------\n");
+					printf("|                                                                  |\n");
+					printf("--------------------------------------------------------------------\n");
+					Mens = Mens->MensProx;
+				}
 			}
 		}
 		else
-		{
-			printf("Assunto não encontrado\n");	
-		}	
+			printf("\nNao ha Mensagens com esta Data!\n");
 	}
-	return Mens;
+	getch();
 }
+
+void ConsultarMensagem(TpDescritor D, char Login[50])
+{
+	TpServidor *Serv=D.Inicio;
+	TpMensagem *Mens;
+	char Assunto[50];
+	if (Serv==NULL)
+	{
+		printf("\n\nLista de Servidores Vazia!\n");
+		getch();
+	}
+	else
+	{
+		printf("\n\n** CONSULTA DE SERVIDORES **\n\n");
+		printf("Qual o Assunto da Mensagem que esta procurando?\n");
+		fflush(stdin);
+		gets(Assunto);
+		while (strcmp(Assunto, "\0")!=0)
+		{
+			Mens = BuscaMensagem(D, Login, Assunto);
+			if (Mens!=NULL)
+			{
+				printf("\nRemetente: %s\nDestinatario: %s", Mens->LoginReme, Mens->LoginDest);
+				printf("\nAssunto: %s\nMensagem: %s\n%s\n", Mens->Assunto, Mens->Mensagem, Mens->DataHora);
+			}
+			else
+				printf("\nNao ha Mensagens com esse Assunto!\n");
+			getch();
+			printf("\nQual o Assunto da Mensagem que esta procurando?\n");
+			fflush(stdin);
+			gets(Assunto);
+		}
+	}
+}
+
+TpMensagem* ExcluirMensagem(TpDescritor D, char Login[50], char Assunto[50])
+{
+	TpUsuario *Usu=BuscaUsuario(D, Login);
+	TpMensagem *Mens=Usu->UsuMens, *BackMens;
+	if (strcmp(Assunto, Mens->Assunto)==0)
+	{
+		Usu->UsuMens = Mens->MensProx;
+		Mens->MensProx->MensAnt = NULL;
+	}
+	else
+	{
+		while (Mens->MensProx!=NULL && strcmp(Mens->Assunto, Assunto)!=0)
+			Mens = Mens->MensProx;
+		if (Mens->MensProx==NULL)
+			Mens->MensAnt->MensProx = NULL;
+		else
+		{
+			Mens->MensProx->MensAnt = Mens->MensAnt;
+			Mens->MensAnt->MensProx = Mens->MensProx;
+		}
+	}
+	BackMens = Mens;
+	delete(Mens);
+	return BackMens;
+}
+
+//Outra versão de Mensagens
+/* void ListarMensagensN(TpDescritor D, char Login[50])
+{
+	TpUsuario *Usu=BuscaUsuario(D, Login);
+	TpMensagem *Mens;
+	int i;
+	if (D.Inicio==NULL)
+		printf("\n\nLista de Servidores Vazia!\n");
+	else
+	{
+		Mens = Usu->UsuMens;
+		printf("\n\n\t** LISTA DE TODAS AS MENSAGENS DO USUARIO **\n");
+		printf("--------------------------------------------------------------------\n");
+		while (Mens!=NULL)
+		{
+			printf("| Remetente: %-53s |\n", Mens->LoginReme);
+			printf("|                                                                  |\n");
+			printf("| Destinatario: %-50s |\n", Mens->LoginDest);
+			printf("--------------------------------------------------------------------\n");
+			printf("| Assunto: %-55s |\n", Mens->Assunto);
+			printf("|                                                                  |\n");
+			printf("| Mensagem: %-54s |\n", Mens->Mensagem);
+			for (i=0; Mens->Mensagem[i]!='\0'; i++)
+				printf("")/
+			printf("|                                                                  |\n");
+			printf("|                                                                  |\n");
+			printf("| %-64s |\n", Mens->DataHora);
+			printf("--------------------------------------------------------------------\n");
+			printf("|                                                                  |\n");
+			printf("--------------------------------------------------------------------\n");
+			Mens = Mens->MensProx;
+		}
+	}
+	getch();
+} */
