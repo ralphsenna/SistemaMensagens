@@ -139,13 +139,16 @@ void SalvarListas(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *
 
 void AbrindoPrograma(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensagem *Mens)
 {
-	FILE *ArqServ = fopen("Servidores.dat", "ab");
-	FILE *ArqUsu = fopen("Usuarios.dat", "ab");
-	FILE *ArqMens = fopen("Mensagens.dat", "ab");
+	FILE *ArqServ = fopen("Servidores.dat", "rb");
+	FILE *ArqUsu = fopen("Usuarios.dat", "rb");
+	FILE *ArqMens = fopen("Mensagens.dat", "rb");
 	TpServidor RegServ;
 	TpUsuario RegUsu;
 	if (ArqServ==NULL)
 	{
+		ArqServ = fopen("Servidores.dat", "wb");
+		ArqUsu = fopen("Usuarios.dat", "wb");
+		ArqMens = fopen("Mensagens.dat", "wb");
 		strcpy(RegUsu.Login, "radmin@admin");
 		strcpy(RegUsu.Senha, "123");
 		RegUsu.Tipo = 'A';
@@ -165,13 +168,18 @@ void AbrindoPrograma(TpDescritor &D, TpServidor *Serv, TpUsuario *Usu, TpMensage
 		RegServ.ServProx = NULL;
 		RegServ.ServUsu = NULL;
 		fwrite(&RegServ, sizeof(TpServidor), 1, ArqServ);
+		fclose(ArqServ);
+		fclose(ArqUsu);
+		fclose(ArqMens);
 		RecuperaListas(D, ArqServ, ArqUsu, ArqMens, Serv, Usu, Mens);
 	}
 	else
+	{
 		RecuperaListas(D, ArqServ, ArqUsu, ArqMens, Serv, Usu, Mens);
-	fclose(ArqServ);
-	fclose(ArqUsu);
-	fclose(ArqMens);
+		fclose(ArqServ);
+		fclose(ArqUsu);
+		fclose(ArqMens);
+	}
 }
 
 void CadastroServidores(TpDescritor &D)
