@@ -306,12 +306,12 @@ void CadastroUsuarios(TpDescritor D, char Tipo)
 				if (Tipo=='A')
 				{
 					printf("Tipo de Usuario (A) Administrador ou (C) Comum: ");
-					scanf("%c", &Usu.Tipo);
+					toupper(getche());
 				}
 				else
 					Usu.Tipo = 'C';
 				CadastrarUsuarioOrd(D, Usu);
-				printf("\nUsuario %s cadastrado com sucesso!\n", Usu.Login);
+				printf("\n\nsuario %s cadastrado com sucesso!\n", Usu.Login);
 			}
 			else
 				printf("\nUsuario ja existente neste Servidor!\n");
